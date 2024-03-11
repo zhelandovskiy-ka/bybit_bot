@@ -102,11 +102,11 @@ public class StrategyServiceImpl implements StrategyService {
         double sum = statisticsService.getProfitByInstrumentAndStrategy(instrumentName, str.getName());
         double percent = statisticsService.getPercentByInstrumentAndStrategy(instrumentName, str.getName());
 
-        double percentOfSum = sum / bank * 100;
+        double percentOfSum = Utilities.roundDouble(sum / bank * 100);
 
         double sumWithLeverage = instrumentService.getSumWithLeverage(SumType.sum, instrumentName);
 
-        return str.getMessageForSend(result, sumWithLeverage, percent, sum, percentOfSum);
+        return str.getMessageForSend(result, sumWithLeverage, percent, sum, percentOfSum, instrumentService, this);
     }
 
     private String generateResultMessage(Strategy str) {

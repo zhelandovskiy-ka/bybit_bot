@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Candlestick;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Instrument;
 import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
+import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
 import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
@@ -15,10 +16,10 @@ import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 public class MaxChangeStrategy extends Strategy {
     private double allQuantity = 0;
     private double allPrices = 0;
-    private boolean wasOpen = false;
     private double slShift;
     private double miniSL;
     private double maxChange;
+    private boolean wasOpen = false;
 
     @Override
     public String toString() {
@@ -42,11 +43,14 @@ public class MaxChangeStrategy extends Strategy {
     }
 
     @Override
-    public boolean checkToOpen(InstrumentService is, StrategyService ss) {
+    public boolean checkToOpen(ISService isService) {
+        InstrumentService is = isService.getInstrumentService();
+        StrategyService ss = isService.getStrategyService();
+
         Instrument instrument = is.getInstrumentByName(getInstrumentName());
         double currentPrice = instrument.getCurrentPrice();
 
-        Candlestick cndst = instrument.getCandlestickList().get(0);
+        Candlestick cndst = instrument.getCandlestickList().getFirst();
 
         double profit = ss.getProfitPercent(cndst.getPriceOpen(), currentPrice);
         double maxChange = (double) getParameters().get("maxChange");
@@ -88,7 +92,9 @@ public class MaxChangeStrategy extends Strategy {
     }
 
     @Override
-    public boolean checkToClose(InstrumentService is, StrategyService ss) {
+    public boolean checkToClose(ISService isService) {
+        StrategyService ss = isService.getStrategyService();
+
         double profitPercent = ss.getProfitPercent(this);
 
         log.info(STR."     \{getInstrumentName()} \{getName()} check conditionToClose getProfitPercent() <= getSlPercent() \{
@@ -123,10 +129,17 @@ public class MaxChangeStrategy extends Strategy {
     }
 
     @Override
-    public String getMessageForSend(String result, double sumWithLeverage, double percent, double sum, double percentOfSum) {
+    public String getMessageForSend(String result, double sumWithLeverage, double percent, double sum, double percentOfSum, InstrumentService is, StrategyService ss) {
         String isOpenClose = isOpen() ? "#open" : "#close";
 
         double pavg = Utilities.roundDouble(getAllPrices() / getAllQuantity());
+
+        Instrument instrument = is.getInstrumentByName(getInstrumentName());
+        double currentPrice = instrument.getCurrentPrice();
+        Candlestick cndst = instrument.getCandlestickList().getFirst();
+        double profit = ss.getProfitPercent(cndst.getPriceOpen(), currentPrice);
+
+        String direction = currentPrice > cndst.getPriceOpen() ? "⬆ " : "⬇ ";
 
         return STR."""
         #\{getName()} #\{getSide()} \{isOpenClose}
@@ -136,6 +149,9 @@ public class MaxChangeStrategy extends Strategy {
         Ставка: \{sumWithLeverage} Вся ставка: \{getAllBetSum()}
 
         AllPrices: \{Utilities.roundDouble(getAllPrices())} AllQuantity: \{getAllQuantity()}
+
+        \{direction} \{Utilities.roundDouble(cndst.getPriceOpen())} -> \{Utilities.roundDouble(currentPrice)} (\{Utilities.roundDouble(profit)}%)
+
 
         \{getInstrumentName()}: \{percent}% | \{sum}$ | \{percentOfSum}%""";
     }

@@ -4,6 +4,7 @@ package ru.ka_zhelandovskiy.bybit_bot.strategies;
 import com.bybit.api.client.domain.trade.Side;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
 import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
@@ -61,7 +62,7 @@ public class Strategy {
                 '}';
     }
 
-    public String getMessageForSend(String result, double sumWithLeverage, double percent, double sum, double percentOfSum) {
+    public String getMessageForSend(String result, double sumWithLeverage, double percent, double sum, double percentOfSum, InstrumentService is, StrategyService ss) {
         String isOpenClose = isOpen() ? "#open" : "#close";
 
         return "#" + getName() + " #" + getSide() + " " + isOpenClose
@@ -70,11 +71,11 @@ public class Strategy {
                 + "\n\n" + getInstrumentName() + ": " + percent + "% | " + sum + "$ | " + percentOfSum + "%";
     }
 
-    public boolean checkToOpen(InstrumentService is, StrategyService ss) {
+    public boolean checkToOpen(ISService isService) {
         return false;
     };
 
-    public boolean checkToClose(InstrumentService is, StrategyService ss) {
+    public boolean checkToClose(ISService isService) {
         return false;
     }
 

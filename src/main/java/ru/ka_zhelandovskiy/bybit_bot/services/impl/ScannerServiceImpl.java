@@ -40,7 +40,7 @@ public class ScannerServiceImpl implements ScannerService {
                     if (!str.isOpen()) {
                         log.info(STR."  CHECK TO OPEN: \{str.getName()} \{instrumentName} \{str.getSide()}");
 
-                        checkToOpen = str.checkToOpen(instrumentService, strategyService);
+                        checkToOpen = str.checkToOpen(isService);
 
                         log.info(STR."  RETURN \{checkToOpen}");
 
@@ -48,7 +48,7 @@ public class ScannerServiceImpl implements ScannerService {
                     if (str.isOpen()) {
                         log.info(STR."  CHECK TO CLOSE: \{str.getName()} \{instrumentName} \{str.getSide()}");
 
-                        checkToClose = str.checkToClose(instrumentService, strategyService);
+                        checkToClose = str.checkToClose(isService);
 
                         log.info(STR."  RETURN \{checkToClose}");
                     }

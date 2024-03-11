@@ -44,9 +44,9 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     @Override
     public double getProfitByInstrumentAndStrategy(String instName, String strName) {
-        return statisticsRepository.findByInstrumentAndStrategyAndProfitIsNotNull(instName, strName)
+        return Utilities.roundDouble(statisticsRepository.findByInstrumentAndStrategyAndProfitIsNotNull(instName, strName)
                 .stream()
                 .mapToDouble(StatisticsModel::getProfit)
-                .sum();
+                .sum());
     }
 }
