@@ -18,7 +18,7 @@ public class MaxChangeStrategy extends Strategy {
     private double allPrices = 0;
     private double slShift;
     private double miniSL;
-    private double maxChange;
+    private double firstOpenPrice;
     private boolean wasOpen = false;
 
     @Override
@@ -26,20 +26,18 @@ public class MaxChangeStrategy extends Strategy {
         return STR."MaxChangeStrategy{getName()=\{getName()
                 }, getInstrumentName()=\{getInstrumentName()
                 }, getChannelId()=\{getChannelId()
-//                }, getParameters() =\{getParameters()
-                }, maxChange=\{maxChange
                 }, slShift=\{slShift
                 }, miniSL=\{miniSL
                 }, getSlPercent()=\{getSlPercent()
                 }, getTpPercent()=\{getTpPercent()
-                }\{'}'}";
+                }, isActive()=\{isActive()
+                }}";
     }
 
     public MaxChangeStrategy(Strategy strategy) {
         super(strategy);
         this.slShift = (Double) strategy.getParameters().get("slShift");
         this.miniSL = (Double) strategy.getParameters().get("miniSL");
-        this.maxChange = (Double) strategy.getParameters().get("maxChange");
     }
 
     @Override
@@ -52,32 +50,35 @@ public class MaxChangeStrategy extends Strategy {
 
         Candlestick cndst = instrument.getCandlestickList().getFirst();
 
-        double profit = ss.getProfitPercent(cndst.getPriceOpen(), currentPrice);
-        double maxChange = (double) getParameters().get("maxChange");
+        double priceChange = ss.getPriceChangePercent(cndst.getPriceOpen(), currentPrice);
+        double maxChange = instrument.getMaxChange();
 
-        boolean conditionToOpen = profit >= maxChange;
-        log.info(STR."    \{instrument.getSymbol()} StrategyMaxChange check conditionToOpen profit>=getMaxChange \{Utilities.roundDouble(profit)} >= \{maxChange}");
+        boolean conditionToOpen = priceChange >= maxChange;
+        log.info(STR."    \{instrument.getSymbol()} | \{getName()} checkToOpen priceChange >= getMaxChange \{Utilities.roundDouble(priceChange)} >= \{maxChange}?");
 
         if (wasOpen) {
             conditionToOpen = true;
-            setPriceOpen(getAllPrices() / getAllQuantity());
-            log.info(STR."    setPriceOpen: \{getAllPrices() / getAllQuantity()}");
+//            setPriceOpen(getAllPrices() / getAllQuantity());
+            log.info(STR."        it wasOpen = true | setPriceOpen: \{getPriceOpen()}");
         }
 
-//        if (true) {
         if (conditionToOpen) {
             wasOpen = false;
 
             double quantity = Double.parseDouble(is.getQuantity(getInstrumentName()));
 
-            log.info(STR."    \{getInstrumentName()} getAllPrices(), getAllQuantity(), getAllBetSum():\{
-                    getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()} condOp: \{conditionToOpen} wasOpen: \{wasOpen}");
+            log.info(STR."    \{getInstrumentName()} conditionToOpen is \{conditionToOpen}");
+            log.info(STR."    \{getInstrumentName()} \{getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()} (getAllPrices(), getAllQuantity(), getAllBetSum())");
 
             setAllPrices(getAllPrices() + (currentPrice * quantity));
             setAllQuantity(getAllQuantity() + quantity);
             setAllBetSum(getAllBetSum() + is.getSumWithLeverage(SumType.sum, getInstrumentName()));
+            setPriceOpen(instrument.getCurrentPrice());
 
-            log.info(STR."    \{getInstrumentName()} getAllPrices(), getAllQuantity(), getAllBetSum(): \{getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()}");
+            if (firstOpenPrice == 0)
+                firstOpenPrice = currentPrice;
+
+            log.info(STR."    \{getInstrumentName()} \{getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()} (getAllPrices(), getAllQuantity(), getAllBetSum())");
 
             if (getSide() == null) {
                 if (currentPrice < cndst.getPriceOpen())
@@ -87,42 +88,48 @@ public class MaxChangeStrategy extends Strategy {
             }
         }
 
-//        return false;
         return conditionToOpen;
     }
 
     @Override
     public boolean checkToClose(ISService isService) {
         StrategyService ss = isService.getStrategyService();
+//        InstrumentService is = isService.getInstrumentService();
+
+//        double currentPrice = is.getInstrumentByName(getInstrumentName()).getCurrentPrice();
 
         double profitPercent = ss.getProfitPercent(this);
+        double priceChangePercentStart = ss.getProfitPercent(this, firstOpenPrice);
 
-        log.info(STR."     \{getInstrumentName()} \{getName()} check conditionToClose getProfitPercent() <= getSlPercent() \{
-                Utilities.roundDouble(profitPercent)} <= \{Utilities.roundDouble(getSlPercent())} SL: \{getSlPercent()} TP: \{getTpPercent()}");
+        log.info(STR."     \{getInstrumentName()} \{getName()} checkToClose getPriceChangePercent() <= getSlPercent()? \{
+                Utilities.roundDouble(priceChangePercentStart)} <= \{getSlPercent()} TP: \{getTpPercent()}");
 
-        if (profitPercent <= getSlPercent()) {
-            log.info("        getProfitPercent() <= getSlPercent() true");
-
+        if (priceChangePercentStart <= getSlPercent()) {
             setPriceOpen(getAllPrices() / getAllQuantity());
+
+            log.info(STR."        TRUE getProfitPercent() <= getSlPercent() | SET PRICE OPEN: \{getPriceOpen()}");
 
             setAllPrices(0);
             setAllQuantity(0);
+            setPriceOpen(0);
+            setFirstOpenPrice(0);
+
             return true;
         }
 
-        log.info(STR."     \{getInstrumentName()} \{profitPercent} <= \{miniSL}");
+        log.info(STR."     \{getInstrumentName()} \{profitPercent} <= \{miniSL}?");
 
         if (profitPercent <= miniSL) {
-            log.info(STR."        \{getInstrumentName()} setOpen(false)");
             wasOpen = true;
             setOpen(false);
+            log.info(STR."        TRUE | \{getInstrumentName()} setOpen(false) wasOpen(true)");
         }
 
-        log.info(STR."     \{getInstrumentName()} \{profitPercent} >= \{getTpPercent()} && \{profitPercent} > \{getSlPercent() + slShift}");
+        log.info(STR."     \{getInstrumentName()} \{profitPercent} >= \{getTpPercent()} && \{profitPercent} > \{getSlPercent() + slShift}?");
 
         if (profitPercent >= getTpPercent() && profitPercent > getSlPercent() + slShift) {
             setSlPercent(profitPercent - slShift);
-            log.info(STR."\{getInstrumentName()}        set new sl percent \{getSlPercent()}");
+            log.info(STR."        TRUE | SET NEW SL PERCENT \{getSlPercent()}");
         }
 
         return false;
@@ -132,12 +139,12 @@ public class MaxChangeStrategy extends Strategy {
     public String getMessageForSend(String result, double sumWithLeverage, double percent, double sum, double percentOfSum, InstrumentService is, StrategyService ss) {
         String isOpenClose = isOpen() ? "#open" : "#close";
 
-        double pavg = Utilities.roundDouble(getAllPrices() / getAllQuantity());
-
         Instrument instrument = is.getInstrumentByName(getInstrumentName());
-        double currentPrice = instrument.getCurrentPrice();
         Candlestick cndst = instrument.getCandlestickList().getFirst();
-        double profit = ss.getProfitPercent(cndst.getPriceOpen(), currentPrice);
+
+        double pavg = Utilities.roundDouble(getAllPrices() / getAllQuantity());
+        double currentPrice = instrument.getCurrentPrice();
+        double profit = ss.getPriceChangePercent(pavg, currentPrice);
 
         String direction = currentPrice > cndst.getPriceOpen() ? "⬆ " : "⬇ ";
 
@@ -150,8 +157,7 @@ public class MaxChangeStrategy extends Strategy {
 
         AllPrices: \{Utilities.roundDouble(getAllPrices())} AllQuantity: \{getAllQuantity()}
 
-        \{direction} \{Utilities.roundDouble(cndst.getPriceOpen())} -> \{Utilities.roundDouble(currentPrice)} (\{Utilities.roundDouble(profit)}%)
-
+        \{direction} \{Utilities.roundDouble(pavg)} -> \{Utilities.roundDouble(currentPrice)} (\{Utilities.roundDouble(profit)}%)
 
         \{getInstrumentName()}: \{percent}% | \{sum}$ | \{percentOfSum}%""";
     }

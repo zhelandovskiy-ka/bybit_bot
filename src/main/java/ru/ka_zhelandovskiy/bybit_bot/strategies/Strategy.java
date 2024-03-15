@@ -18,21 +18,19 @@ public class Strategy {
     private String instrumentName;
     private String channelId;
     private String type;
-    private boolean open;
-    private Side side;
-    private Map<String, Object> parameters;
     private double priceOpen;
     private double priceClose;
-//    private double currentPrice;
     private double profitPercent;
     private double profitSum;
     private double slPercent;
     private double tpPercent;
-//    private double priceMax;
-//    private double priceMin;
     private double profitMax;
     private double loseMax;
     private double allBetSum = 0;
+    private boolean open;
+    private boolean active;
+    private Side side;
+    private Map<String, Object> parameters;
 
     public Strategy(String name, String channelId) {
         this.name = name;
@@ -47,29 +45,36 @@ public class Strategy {
         this.type = strategy.getType();
         this.slPercent = strategy.getSlPercent();
         this.tpPercent = strategy.getTpPercent();
+        this.active = strategy.isActive();
     }
 
     @Override
     public String toString() {
-        return "Strategy{" +
-                "name='" + name + '\'' +
-                ", instrumentName='" + instrumentName + '\'' +
-                ", channelId='" + channelId + '\'' +
-                ", parameters='" + parameters + '\'' +
-                ", getType()=" + getType()+
-                ", getTpPercent()=" + getTpPercent()+
-                ", getSlPercent()=" + getSlPercent()+
-                '}';
+        return STR.
+                "Strategy{name='\{name
+                        }, instrumentName= '\{instrumentName
+                        }, channelId='\{channelId
+                        }, parameters='\{parameters
+                        }, getType()=\{getType()
+                        }, getTpPercent()=\{getTpPercent()
+                        }, getSlPercent()=\{getSlPercent()
+                        }, isActive()=\{isActive()
+                        }}";
     }
 
     public String getMessageForSend(String result, double sumWithLeverage, double percent, double sum, double percentOfSum, InstrumentService is, StrategyService ss) {
         String isOpenClose = isOpen() ? "#open" : "#close";
 
-        return "#" + getName() + " #" + getSide() + " " + isOpenClose
-                + "\n\n" + "#" + getInstrumentName() + " PO: " + getPriceOpen() + " " + result
-                + "\n\n" + "Ставка: " + sumWithLeverage
-                + "\n\n" + getInstrumentName() + ": " + percent + "% | " + sum + "$ | " + percentOfSum + "%";
+        return STR."""
+        #\{getName()} #\{getSide()} \{isOpenClose}
+
+        #\{getInstrumentName()} PO: \{getPriceOpen()} \{result}
+
+        Ставка: \{sumWithLeverage}
+
+        \{getInstrumentName()}: \{percent}% | \{sum}$ | \{percentOfSum}%""";
     }
+
 
     public boolean checkToOpen(ISService isService) {
         return false;

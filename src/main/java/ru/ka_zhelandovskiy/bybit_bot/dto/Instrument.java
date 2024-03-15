@@ -17,9 +17,8 @@ public class Instrument {
     private boolean ignore;
     private boolean reverse;
     private AverageMove averageMove;
-//    private double maxChange;
+    private double maxChange;
     private List<Candlestick> candlestickList;
-//    private List<Strategy> strategyList;
 
     public double getMinPrice() {
         return candlestickList.stream()
@@ -36,10 +35,6 @@ public class Instrument {
     }
 
     public double getCurrentPrice() {
-        return candlestickList.get(0).getPriceClose();
-    }
-
-    public int getLeverage() {
-        return leverage;
+        return candlestickList.getFirst().getPriceClose();
     }
 }

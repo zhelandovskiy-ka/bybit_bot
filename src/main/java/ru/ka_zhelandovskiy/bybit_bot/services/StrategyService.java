@@ -19,7 +19,9 @@ public interface StrategyService {
 
     double getProfitPercent(Strategy strategy);
 
-    double getProfitPercent(double priceOpen, double price);
+    double getProfitPercent(Strategy strategy, double priceOpen);
+
+    double getPriceChangePercent(double priceOpen, double price);
 
     void calcProfitSum(Strategy s);
 

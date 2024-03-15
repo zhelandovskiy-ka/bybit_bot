@@ -17,4 +17,5 @@ public class InstrumentModel {
     private int qp;
     private boolean ignore;
     private boolean reverse;
+    private double maxChange;
 }

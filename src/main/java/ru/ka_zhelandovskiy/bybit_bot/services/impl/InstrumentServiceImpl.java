@@ -31,6 +31,9 @@ public class InstrumentServiceImpl implements InstrumentService {
         this.parameterService = parameterService;
         this.bybitService = bybitService;
         instrumentList = initInstrumentList();
+
+        log.info("INSTRUMENT LIST:");
+        instrumentList.forEach(System.out::println);
     }
 
     @Override
@@ -97,6 +100,6 @@ public class InstrumentServiceImpl implements InstrumentService {
 
     @Override
     public double getCurrentPrice(String symbol) {
-        return getInstrumentByName(symbol).getCandlestickList().get(0).getPriceClose();
+        return getInstrumentByName(symbol).getCurrentPrice();
     }
 }

@@ -143,25 +143,40 @@ public class StrategyServiceImpl implements StrategyService {
         return STR."\nМакс \{type} : \{loseProfitMax} (\{Utilities.roundDouble(loseProfitMax * leverage)})";
     }
 
-    //    @Override
+    @Override
     public double getProfitPercent(Strategy s) {
         s.setProfitPercent(0);
 
         double currentPrice = instrumentService.getCurrentPrice(s.getInstrumentName());
+        double priceChange = 0;
 
         if (s.getSide() == Side.BUY)
-            s.setProfitPercent(currentPrice - s.getPriceOpen());
+            priceChange = currentPrice - s.getPriceOpen();
 
         if (s.getSide() == Side.SELL)
-            s.setProfitPercent(s.getPriceOpen() - currentPrice);
+            priceChange = s.getPriceOpen() - currentPrice;
 
-        s.setProfitPercent(s.getProfitPercent() / s.getPriceOpen() * 100);
+        s.setProfitPercent(priceChange / s.getPriceOpen() * 100);
 
         return s.getProfitPercent();
     }
 
     @Override
-    public double getProfitPercent(double priceOpen, double price) {
+    public double getProfitPercent(Strategy s, double priceOpen) {
+        double currentPrice = instrumentService.getCurrentPrice(s.getInstrumentName());
+        double priceChange = 0;
+
+        if (s.getSide() == Side.BUY)
+            priceChange = currentPrice - priceOpen;
+
+        if (s.getSide() == Side.SELL)
+            priceChange = priceOpen - currentPrice;
+
+        return priceChange / s.getPriceOpen() * 100;
+    }
+
+    @Override
+    public double getPriceChangePercent(double priceOpen, double price) {
         double profit = (price - priceOpen) / priceOpen * 100;
 
         return profit < 0 ? profit * -1 : profit;
@@ -209,7 +224,7 @@ public class StrategyServiceImpl implements StrategyService {
 
     //    @Override
     private double getProfitWOFee(Strategy strategy) {
-        return Utilities.roundDouble(strategy.getProfitSum() - instrumentService.getSumOfFee(strategy.getInstrumentName()));
+        return Utilities.roundDouble(strategy.getProfitSum() - instrumentService.getSumOfFee(strategy.getInstrumentName()), 2);
     }
 
     //    @Override

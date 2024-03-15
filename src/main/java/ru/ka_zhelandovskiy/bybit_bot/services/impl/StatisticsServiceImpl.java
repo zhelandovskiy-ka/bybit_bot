@@ -47,6 +47,6 @@ public class StatisticsServiceImpl implements StatisticsService {
         return Utilities.roundDouble(statisticsRepository.findByInstrumentAndStrategyAndProfitIsNotNull(instName, strName)
                 .stream()
                 .mapToDouble(StatisticsModel::getProfit)
-                .sum());
+                .sum(),2);
     }
 }

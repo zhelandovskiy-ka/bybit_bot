@@ -21,4 +21,5 @@ public class StrategyModel {
     private String type;
     private double tpPercent;
     private double slPercent;
+    private boolean active;
 }

@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Instrument;
 import ru.ka_zhelandovskiy.bybit_bot.services.*;
+import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 
 @Slf4j
 @Service
@@ -55,17 +56,12 @@ public class ScannerServiceImpl implements ScannerService {
 
                     if (checkToOpen) {
                         str.setOpen(true);
-                        str.setPriceOpen(instrument.getCurrentPrice());
+/*                        if (str.getPriceOpen() == 0) {
+                            str.setPriceOpen(instrument.getCurrentPrice());
+                            log.info(STR."\{str.getInstrumentName()} getPriceOpen() == 0 | setPriceOpen \{str.getPriceOpen()}");
+                        }*/
 
-//                        strategyService.resetMaxMinPrice(str);
-//                        strategyService.resetMaxProfitLose(str);
-
-                        if (!parameterService.isTestMode() && str.getName().equals("maxCh_120SlMax")) {
-                            String quantity = instrumentService.getQuantity(str.getInstrumentName());
-                            log.info(STR."TRY OPEN ORDER: \{str.getInstrumentName()} \{quantity} \{str.getSide()} \{str.getName()}");
-
-                            log.info(bybitService.placeOrder(str.getInstrumentName(), quantity, str.getSide()));
-                        }
+                        checkForPlaceOrder(str, instrumentService);
 
                         log.info("---------------------------------------------------------------");
 
@@ -94,6 +90,16 @@ public class ScannerServiceImpl implements ScannerService {
 
                 });
         System.out.println("----------------------");
+    }
+
+    private void checkForPlaceOrder(Strategy str, InstrumentService instrumentService) {
+
+        if (!parameterService.isTestMode() && str.isActive()) {
+            String quantity = instrumentService.getQuantity(str.getInstrumentName());
+            log.info(STR."TRY OPEN ORDER: \{str.getInstrumentName()} \{quantity} \{str.getSide()} \{str.getName()}");
+
+            log.info(bybitService.placeOrder(str.getInstrumentName(), quantity, str.getSide()));
+        }
     }
 
 }
