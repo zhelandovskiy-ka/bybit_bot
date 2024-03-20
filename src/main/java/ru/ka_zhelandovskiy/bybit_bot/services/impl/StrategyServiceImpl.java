@@ -2,6 +2,7 @@ package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 
 import com.bybit.api.client.domain.trade.Side;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.mapper.StrategyMapper;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class StrategyServiceImpl implements StrategyService {
     private final StrategyRepository strategyRepository;
     private final StrategyMapper strategyMapper;
@@ -158,6 +160,8 @@ public class StrategyServiceImpl implements StrategyService {
 
         s.setProfitPercent(priceChange / s.getPriceOpen() * 100);
 
+        log.info(STR."     getSide: \{s.getSide()} currentPrice: \{currentPrice} getPriceOpen: \{s.getPriceOpen()} ProfitPercent: \{priceChange} / \{s.getPriceOpen()} * 100 = \{s.getProfitPercent()}");
+
         return s.getProfitPercent();
     }
 
@@ -172,11 +176,16 @@ public class StrategyServiceImpl implements StrategyService {
         if (s.getSide() == Side.SELL)
             priceChange = priceOpen - currentPrice;
 
-        return priceChange / s.getPriceOpen() * 100;
+        double profitPercent = priceChange / s.getPriceOpen() * 100;
+
+        log.info(STR."     getSide: \{s.getSide()} currentPrice: \{currentPrice} priceOpen: \{priceOpen} ProfitPercent: \{priceChange} / \{s.getPriceOpen()} * 100 = \{profitPercent}");
+
+        return profitPercent;
     }
 
     @Override
     public double getPriceChangePercent(double priceOpen, double price) {
+        log.info(STR."    priceOpen: \{priceOpen} price: \{price}");
         double profit = (price - priceOpen) / priceOpen * 100;
 
         return profit < 0 ? profit * -1 : profit;

@@ -54,6 +54,7 @@ public class MaxChangeStrategy extends Strategy {
         double maxChange = instrument.getMaxChange();
 
         boolean conditionToOpen = priceChange >= maxChange;
+        log.info(STR."    current price: \{currentPrice}");
         log.info(STR."    \{instrument.getSymbol()} | \{getName()} checkToOpen priceChange >= getMaxChange \{Utilities.roundDouble(priceChange)} >= \{maxChange}?");
 
         if (wasOpen) {
@@ -98,16 +99,15 @@ public class MaxChangeStrategy extends Strategy {
 
 //        double currentPrice = is.getInstrumentByName(getInstrumentName()).getCurrentPrice();
 
-        double profitPercent = ss.getProfitPercent(this);
         double priceChangePercentStart = ss.getProfitPercent(this, firstOpenPrice);
 
-        log.info(STR."     \{getInstrumentName()} \{getName()} checkToClose getPriceChangePercent() <= getSlPercent()? \{
+        log.info(STR."     \{getInstrumentName()} \{getName()} checkToClose priceChangePercentStart <= getSlPercent()? \{
                 Utilities.roundDouble(priceChangePercentStart)} <= \{getSlPercent()} TP: \{getTpPercent()}");
 
         if (priceChangePercentStart <= getSlPercent()) {
             setPriceOpen(getAllPrices() / getAllQuantity());
 
-            log.info(STR."        TRUE getProfitPercent() <= getSlPercent() | SET PRICE OPEN: \{getPriceOpen()}");
+            log.info(STR."        TRUE | SET PRICE OPEN: \{getAllPrices()} / \{getAllQuantity()} = \{getPriceOpen()}");
 
             setAllPrices(0);
             setAllQuantity(0);
@@ -116,6 +116,8 @@ public class MaxChangeStrategy extends Strategy {
 
             return true;
         }
+
+        double profitPercent = ss.getProfitPercent(this);
 
         log.info(STR."     \{getInstrumentName()} \{profitPercent} <= \{miniSL}?");
 
@@ -129,7 +131,7 @@ public class MaxChangeStrategy extends Strategy {
 
         if (profitPercent >= getTpPercent() && profitPercent > getSlPercent() + slShift) {
             setSlPercent(profitPercent - slShift);
-            log.info(STR."        TRUE | SET NEW SL PERCENT \{getSlPercent()}");
+            log.info(STR."        TRUE | SET NEW SL PERCENT: \{profitPercent} - \{slShift} = \{getSlPercent()}");
         }
 
         return false;
