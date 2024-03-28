@@ -1,5 +1,6 @@
 package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.ka_zhelandovskiy.bybit_bot.configurations.TelegramConfig;
@@ -10,6 +11,7 @@ import ru.ka_zhelandovskiy.bybit_bot.services.ParameterService;
 import ru.ka_zhelandovskiy.bybit_bot.services.ResultService;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
+@Slf4j
 @Service
 public class ResultServiceImpl implements ResultService {
     private final ResultsRepository resultsRepository;
@@ -58,6 +60,8 @@ public class ResultServiceImpl implements ResultService {
             result.setMaxProfit(Math.max(result.getMaxProfit(), profit));
         if (profit < 0)
             result.setMaxLose(Math.min(result.getMaxLose(), profit));
+
+        log.info(STR."SAVE RESULT: \{result.toString()}");
 
         resultsRepository.save(result);
     }

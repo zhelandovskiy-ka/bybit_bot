@@ -160,7 +160,7 @@ public class StrategyServiceImpl implements StrategyService {
 
         s.setProfitPercent(priceChange / s.getPriceOpen() * 100);
 
-        log.info(STR."     getSide: \{s.getSide()} currentPrice: \{currentPrice} getPriceOpen: \{s.getPriceOpen()} ProfitPercent: \{priceChange} / \{s.getPriceOpen()} * 100 = \{s.getProfitPercent()}");
+        log.info(STR."     getProfitPercent 1 | getSide: \{s.getSide()} currentPrice: \{currentPrice} getPriceOpen: \{s.getPriceOpen()} ProfitPercent: \{priceChange} / \{s.getPriceOpen()} * 100 = \{s.getProfitPercent()}");
 
         return s.getProfitPercent();
     }
@@ -177,15 +177,15 @@ public class StrategyServiceImpl implements StrategyService {
             priceChange = priceOpen - currentPrice;
 
         double profitPercent = priceChange / s.getPriceOpen() * 100;
-
-        log.info(STR."     getSide: \{s.getSide()} currentPrice: \{currentPrice} priceOpen: \{priceOpen} ProfitPercent: \{priceChange} / \{s.getPriceOpen()} * 100 = \{profitPercent}");
+//2024-03-21 12:04:50 -    getProfitPercent 2 | getSide: SELL currentPrice: 3086.3 firstOpenPrice: 3085.3 ProfitPercent: -1.0 / 3085.3 * 100 = -0.03241175898616018
+        log.info(STR."     getProfitPercent 2 | getSide: \{s.getSide()} currentPrice: \{currentPrice} firstOpenPrice: \{priceOpen} ProfitPercent: \{priceChange} / \{s.getPriceOpen()} * 100 = \{profitPercent}");
 
         return profitPercent;
     }
 
     @Override
     public double getPriceChangePercent(double priceOpen, double price) {
-        log.info(STR."    priceOpen: \{priceOpen} price: \{price}");
+        log.info(STR."    cndst.priceOpen: \{priceOpen} curPrice: \{price}");
         double profit = (price - priceOpen) / priceOpen * 100;
 
         return profit < 0 ? profit * -1 : profit;
@@ -233,11 +233,15 @@ public class StrategyServiceImpl implements StrategyService {
 
     //    @Override
     private double getProfitWOFee(Strategy strategy) {
+        log.info(STR."getProfitWOFee: \{strategy.getProfitSum()} - \{instrumentService.getSumOfFee(strategy.getInstrumentName())}");
+
         return Utilities.roundDouble(strategy.getProfitSum() - instrumentService.getSumOfFee(strategy.getInstrumentName()), 2);
     }
 
     //    @Override
     private double getPercentByProfit(Strategy strategy) {
+        log.info(STR."getPercentByProfit: \{getProfitWOFee(strategy)} / \{parameterService.getSum() * 100}");
+
         return Utilities.roundDouble(getProfitWOFee(strategy) / parameterService.getSum() * 100);
     }
 

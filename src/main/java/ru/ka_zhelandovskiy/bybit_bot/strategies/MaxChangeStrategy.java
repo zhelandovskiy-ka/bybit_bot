@@ -111,7 +111,7 @@ public class MaxChangeStrategy extends Strategy {
 
             setAllPrices(0);
             setAllQuantity(0);
-            setPriceOpen(0);
+//            setPriceOpen(0);
             setFirstOpenPrice(0);
 
             return true;
@@ -145,10 +145,11 @@ public class MaxChangeStrategy extends Strategy {
         Candlestick cndst = instrument.getCandlestickList().getFirst();
 
         double pavg = Utilities.roundDouble(getAllPrices() / getAllQuantity());
+        double priceOpen = cndst.getPriceOpen();
         double currentPrice = instrument.getCurrentPrice();
-        double profit = ss.getPriceChangePercent(pavg, currentPrice);
+        double profit = ss.getPriceChangePercent(priceOpen, currentPrice);
 
-        String direction = currentPrice > cndst.getPriceOpen() ? "⬆ " : "⬇ ";
+        String direction = currentPrice > priceOpen ? "⬆ " : "⬇ ";
 
         return STR."""
         #\{getName()} #\{getSide()} \{isOpenClose}
@@ -159,7 +160,7 @@ public class MaxChangeStrategy extends Strategy {
 
         AllPrices: \{Utilities.roundDouble(getAllPrices())} AllQuantity: \{getAllQuantity()}
 
-        \{direction} \{Utilities.roundDouble(pavg)} -> \{Utilities.roundDouble(currentPrice)} (\{Utilities.roundDouble(profit)}%)
+        \{direction} \{Utilities.roundDouble(getPriceOpen())} -> \{Utilities.roundDouble(currentPrice)} (\{Utilities.roundDouble(profit)}%) | \{instrument.getMaxChange()}
 
         \{getInstrumentName()}: \{percent}% | \{sum}$ | \{percentOfSum}%""";
     }

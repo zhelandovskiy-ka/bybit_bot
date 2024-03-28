@@ -33,7 +33,7 @@ public class ScannerServiceImpl implements ScannerService {
                 .forEach(str -> {
                     String instrumentName = str.getInstrumentName();
                     log.info("---------------------------------------------------------------");
-                    Instrument instrument = instrumentService.getInstrumentByName(instrumentName);
+//                    Instrument instrument = instrumentService.getInstrumentByName(instrumentName);
 
                     boolean checkToOpen = false;
                     boolean checkToClose = false;
@@ -85,7 +85,6 @@ public class ScannerServiceImpl implements ScannerService {
                         statisticsService.addRecord(str);
                         strategyService.resetSLTPPercent(str);
                         strategyService.resetSide(str);
-
                     }
 
                 });
