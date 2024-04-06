@@ -79,7 +79,7 @@ public class MaxChangeStrategy extends Strategy {
 
             if (getFirstOpenPrice() == 0) {
                 setFirstOpenPrice(currentPrice);
-                setPreviousPriceOpen(currentPrice);
+                setPreviousPriceOpen(cndst.getPriceOpen());
             }
 
             log.info(STR."    \{getInstrumentName()} \{getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()} (getAllPrices(), getAllQuantity(), getAllBetSum())");

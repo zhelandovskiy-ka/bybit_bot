@@ -93,7 +93,6 @@ public class BybitBotApplication {
                     .average()
                     .orElse(0);
 
-//            System.out.println(STR."\{symbol}: \{Utilities.roundDouble(avgMaxPerc, 3)}");
             System.out.println(STR."\{Utilities.roundDouble(avgMaxPerc, 3)}");
         });
 
