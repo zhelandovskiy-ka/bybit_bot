@@ -3,7 +3,6 @@ package ru.ka_zhelandovskiy.bybit_bot.controllers;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Kline;
-import ru.ka_zhelandovskiy.bybit_bot.models.enums.Parameter;
 import ru.ka_zhelandovskiy.bybit_bot.repository.ParametersRepository;
 import ru.ka_zhelandovskiy.bybit_bot.services.BybitService;
 import ru.ka_zhelandovskiy.bybit_bot.services.ParameterService;
@@ -29,6 +28,4 @@ public class BybitController {
     public Kline getCandlestickHistory() {
         return null;
     }
-
-
 }

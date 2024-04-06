@@ -4,7 +4,6 @@ import com.bybit.api.client.domain.trade.Side;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.ka_zhelandovskiy.bybit_bot.dto.Instrument;
 import ru.ka_zhelandovskiy.bybit_bot.services.*;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 
@@ -33,7 +32,6 @@ public class ScannerServiceImpl implements ScannerService {
                 .forEach(str -> {
                     String instrumentName = str.getInstrumentName();
                     log.info("---------------------------------------------------------------");
-//                    Instrument instrument = instrumentService.getInstrumentByName(instrumentName);
 
                     boolean checkToOpen = false;
                     boolean checkToClose = false;
@@ -56,10 +54,6 @@ public class ScannerServiceImpl implements ScannerService {
 
                     if (checkToOpen) {
                         str.setOpen(true);
-/*                        if (str.getPriceOpen() == 0) {
-                            str.setPriceOpen(instrument.getCurrentPrice());
-                            log.info(STR."\{str.getInstrumentName()} getPriceOpen() == 0 | setPriceOpen \{str.getPriceOpen()}");
-                        }*/
 
                         checkForPlaceOrder(str, instrumentService);
 
@@ -81,8 +75,8 @@ public class ScannerServiceImpl implements ScannerService {
 
                         strategyService.calcMaxProfitLosePercent(str);
                         strategyService.calcProfitSum(str);
-                        strategyService.send(str);
                         statisticsService.addRecord(str);
+                        strategyService.send(str);
                         strategyService.resetSLTPPercent(str);
                         strategyService.resetSide(str);
                     }

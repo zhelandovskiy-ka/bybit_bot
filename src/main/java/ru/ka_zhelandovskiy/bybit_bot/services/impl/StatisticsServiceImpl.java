@@ -1,22 +1,20 @@
 package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 import ru.ka_zhelandovskiy.bybit_bot.models.StatisticsModel;
 import ru.ka_zhelandovskiy.bybit_bot.repository.StatisticsRepository;
 import ru.ka_zhelandovskiy.bybit_bot.services.StatisticsService;
+import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
 @Service
+@RequiredArgsConstructor
 public class StatisticsServiceImpl implements StatisticsService {
     private final StatisticsRepository statisticsRepository;
 
-    public StatisticsServiceImpl(StatisticsRepository statisticsRepository) {
-        this.statisticsRepository = statisticsRepository;
-    }
-
     @Override
-    public void addRecord(Strategy s) {
+    public StatisticsModel addRecord(Strategy s) {
         int result = s.getProfitSum() < 0 ? 0 : 1;
 
         StatisticsModel sm = new StatisticsModel();
@@ -25,13 +23,12 @@ public class StatisticsServiceImpl implements StatisticsService {
         sm.setInstrument(s.getInstrumentName());
         sm.setOpen(s.getPriceOpen());
         sm.setClose(s.getPriceClose());
-        sm.setProfit(s.getProfitSum());
+        sm.setProfit(s.getProfitSumWoFee());
         sm.setResult(result);
         sm.setMaxProfit(s.getProfitMax());
         sm.setMaxLose(s.getLoseMax());
-        sm.setDate("CURRENT_TIMESTAMP");
 
-        statisticsRepository.save(sm);
+        return statisticsRepository.save(sm);
     }
 
     @Override

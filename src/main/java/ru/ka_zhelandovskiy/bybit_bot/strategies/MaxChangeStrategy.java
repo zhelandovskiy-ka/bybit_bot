@@ -74,10 +74,13 @@ public class MaxChangeStrategy extends Strategy {
             setAllPrices(getAllPrices() + (currentPrice * quantity));
             setAllQuantity(getAllQuantity() + quantity);
             setAllBetSum(getAllBetSum() + is.getSumWithLeverage(SumType.sum, getInstrumentName()));
+            setPreviousPriceOpen(getPriceOpen());
             setPriceOpen(instrument.getCurrentPrice());
 
-            if (firstOpenPrice == 0)
-                firstOpenPrice = currentPrice;
+            if (getFirstOpenPrice() == 0) {
+                setFirstOpenPrice(currentPrice);
+                setPreviousPriceOpen(currentPrice);
+            }
 
             log.info(STR."    \{getInstrumentName()} \{getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()} (getAllPrices(), getAllQuantity(), getAllBetSum())");
 
@@ -113,6 +116,7 @@ public class MaxChangeStrategy extends Strategy {
             setAllQuantity(0);
 //            setPriceOpen(0);
             setFirstOpenPrice(0);
+            setPreviousPriceOpen(0);
 
             return true;
         }
@@ -145,11 +149,11 @@ public class MaxChangeStrategy extends Strategy {
         Candlestick cndst = instrument.getCandlestickList().getFirst();
 
         double pavg = Utilities.roundDouble(getAllPrices() / getAllQuantity());
-        double priceOpen = cndst.getPriceOpen();
+        double cndstPriceOpen = cndst.getPriceOpen();
         double currentPrice = instrument.getCurrentPrice();
-        double profit = ss.getPriceChangePercent(priceOpen, currentPrice);
+        double profit = ss.getPriceChangePercent(cndstPriceOpen, currentPrice);
 
-        String direction = currentPrice > priceOpen ? "⬆ " : "⬇ ";
+        String direction = currentPrice > cndstPriceOpen ? "⬆ " : "⬇ ";
 
         return STR."""
         #\{getName()} #\{getSide()} \{isOpenClose}
@@ -160,7 +164,7 @@ public class MaxChangeStrategy extends Strategy {
 
         AllPrices: \{Utilities.roundDouble(getAllPrices())} AllQuantity: \{getAllQuantity()}
 
-        \{direction} \{Utilities.roundDouble(getPriceOpen())} -> \{Utilities.roundDouble(currentPrice)} (\{Utilities.roundDouble(profit)}%) | \{instrument.getMaxChange()}
+        \{direction} \{Utilities.roundDouble(getPreviousPriceOpen())} -> \{Utilities.roundDouble(currentPrice)} (\{Utilities.roundDouble(profit)}%) | \{instrument.getMaxChange()}
 
         \{getInstrumentName()}: \{percent}% | \{sum}$ | \{percentOfSum}%""";
     }

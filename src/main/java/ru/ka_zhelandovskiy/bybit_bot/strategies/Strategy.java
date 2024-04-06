@@ -19,9 +19,11 @@ public class Strategy {
     private String channelId;
     private String type;
     private double priceOpen;
+    private double previousPriceOpen;
     private double priceClose;
     private double profitPercent;
     private double profitSum;
+    private double profitSumWoFee;
     private double slPercent;
     private double tpPercent;
     private double profitMax;

@@ -80,16 +80,7 @@ public class StrategyServiceImpl implements StrategyService {
 
     @Override
     public void send(Strategy str) {
-//        String result = generateResultMessage(str);
-
-//        chartForm.drawAndMakeScreen(str.getInstrumentName());
-//        InstrumentsController.saveData();
-
-//        generateMessage(str, result);
         senderService.send("screen.png", str.getChannelId(), generateMessage(str));
-
-//        statisticsService.addRecord(str);
-
     }
 
     private String generateMessage(Strategy str) {
@@ -177,7 +168,7 @@ public class StrategyServiceImpl implements StrategyService {
             priceChange = priceOpen - currentPrice;
 
         double profitPercent = priceChange / s.getPriceOpen() * 100;
-//2024-03-21 12:04:50 -    getProfitPercent 2 | getSide: SELL currentPrice: 3086.3 firstOpenPrice: 3085.3 ProfitPercent: -1.0 / 3085.3 * 100 = -0.03241175898616018
+
         log.info(STR."     getProfitPercent 2 | getSide: \{s.getSide()} currentPrice: \{currentPrice} firstOpenPrice: \{priceOpen} ProfitPercent: \{priceChange} / \{s.getPriceOpen()} * 100 = \{profitPercent}");
 
         return profitPercent;
@@ -235,7 +226,11 @@ public class StrategyServiceImpl implements StrategyService {
     private double getProfitWOFee(Strategy strategy) {
         log.info(STR."getProfitWOFee: \{strategy.getProfitSum()} - \{instrumentService.getSumOfFee(strategy.getInstrumentName())}");
 
-        return Utilities.roundDouble(strategy.getProfitSum() - instrumentService.getSumOfFee(strategy.getInstrumentName()), 2);
+        double profitWoFee = Utilities.roundDouble(strategy.getProfitSum() - instrumentService.getSumOfFee(strategy.getInstrumentName()), 2);
+
+        strategy.setProfitSumWoFee(profitWoFee);
+
+        return strategy.getProfitSumWoFee();
     }
 
     //    @Override

@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.ToString;
 
+import java.util.Date;
+
 @Data
 @Entity
 @ToString
@@ -12,7 +14,8 @@ public class StatisticsModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int number;
-    private String date;
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date date;
     private String strategy;
     private String side;
     private String instrument;
@@ -22,4 +25,9 @@ public class StatisticsModel {
     private int result;
     private double maxProfit;
     private double maxLose;
+
+    @PrePersist
+    protected void onCreate() {
+        date = new Date();
+    }
 }
