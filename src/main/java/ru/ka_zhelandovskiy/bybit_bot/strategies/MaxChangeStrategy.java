@@ -142,7 +142,7 @@ public class MaxChangeStrategy extends Strategy {
     }
 
     @Override
-    public String getMessageForSend(String result, double sumWithLeverage, double percent, double sum, double percentOfSum, InstrumentService is, StrategyService ss) {
+    public String getMessageForSendOpenPosition(double sumWithLeverage, double percent, double sum, double percentOfSum, InstrumentService is, StrategyService ss) {
         String isOpenClose = isOpen() ? "#open" : "#close";
 
         Instrument instrument = is.getInstrumentByName(getInstrumentName());
@@ -158,7 +158,7 @@ public class MaxChangeStrategy extends Strategy {
         return STR."""
         #\{getName()} #\{getSide()} \{isOpenClose}
 
-        #\{getInstrumentName()} PO: \{getPriceOpen()} PAVG: \{ pavg } \{result}
+        #\{getInstrumentName()} PO: \{getPriceOpen()} PAVG: \{ pavg }
 
         Ставка: \{sumWithLeverage} Вся ставка: \{getAllBetSum()}
 

@@ -64,11 +64,19 @@ public class Strategy {
                         }}";
     }
 
-    public String getMessageForSend(String result, double sumWithLeverage, double percent, double sum, double percentOfSum, InstrumentService is, StrategyService ss) {
+    public String getMessageForSendOpenPosition(double sumWithLeverage, double percent, double sum, double percentOfSum, InstrumentService is, StrategyService ss) {
+        return getMessage("", sumWithLeverage, percent, sum, percentOfSum);
+    }
+
+    public String getMessageForSendClosePosition(String result, double sumWithLeverage, double percent, double sum, double percentOfSum) {
+        return getMessage(result, sumWithLeverage, percent, sum, percentOfSum);
+    }
+
+    private String getMessage(String result, double sumWithLeverage, double percent, double sum, double percentOfSum) {
         String isOpenClose = isOpen() ? "#open" : "#close";
 
         return STR."""
-        #\{getName()} #\{getSide()} \{isOpenClose}
+        #\{getName()} #\{getSide()} #\{isOpenClose}
 
         #\{getInstrumentName()} PO: \{getPriceOpen()} \{result}
 
@@ -77,10 +85,9 @@ public class Strategy {
         \{getInstrumentName()}: \{percent}% | \{sum}$ | \{percentOfSum}%""";
     }
 
-
     public boolean checkToOpen(ISService isService) {
         return false;
-    };
+    }
 
     public boolean checkToClose(ISService isService) {
         return false;

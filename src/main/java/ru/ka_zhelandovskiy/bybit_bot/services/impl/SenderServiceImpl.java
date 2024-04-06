@@ -15,8 +15,7 @@ public class SenderServiceImpl implements SenderService {
     @Override
     public void send(String fileName, String channelId, String message) {
         if (!fileName.isEmpty())
-            telegramConfig.telegramBot().sendMsg(channelId, message);
-//            telegramConfig.telegramBot().sendScreen(fileName, channelId, message);
+            telegramConfig.telegramBot().sendScreen(fileName, channelId, message);
         else
             telegramConfig.telegramBot().sendMsg(channelId, message);
     }

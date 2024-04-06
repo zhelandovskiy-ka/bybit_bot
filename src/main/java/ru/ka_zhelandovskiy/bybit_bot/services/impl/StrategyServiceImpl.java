@@ -80,7 +80,7 @@ public class StrategyServiceImpl implements StrategyService {
 
     @Override
     public void send(Strategy str) {
-        senderService.send("screen.png", str.getChannelId(), generateMessage(str));
+        senderService.send("", str.getChannelId(), generateMessage(str));
     }
 
     private String generateMessage(Strategy str) {
@@ -99,7 +99,10 @@ public class StrategyServiceImpl implements StrategyService {
 
         double sumWithLeverage = instrumentService.getSumWithLeverage(SumType.sum, instrumentName);
 
-        return str.getMessageForSend(result, sumWithLeverage, percent, sum, percentOfSum, instrumentService, this);
+        if (!str.isOpen())
+            return str.getMessageForSendClosePosition(result, sumWithLeverage, percent, sum, percentOfSum);
+
+        return str.getMessageForSendOpenPosition(sumWithLeverage, percent, sum, percentOfSum, instrumentService, this);
     }
 
     private String generateResultMessage(Strategy str) {
