@@ -11,8 +11,8 @@
             <pattern>%d{yyyy-MM-dd HH:mm:ss} - %msg%n</pattern>
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/log-%d{yyyy-MM-dd_HH}.log</fileNamePattern>
-<!--            <maxFileSize>10MB</maxFileSize>-->
+<!--            <fileNamePattern>logs/log-%d{yyyy-MM-dd_HH}.log</fileNamePattern>-->
+            <fileNamePattern>logs/%d{yyyy-MM-dd}/log-%d{yyyy-MM-dd_HH}.log</fileNamePattern>
             <maxHistory>24</maxHistory>
         </rollingPolicy>
     </appender>
