@@ -113,8 +113,6 @@ public class StrategyServiceImpl implements StrategyService {
         double profitReal = getProfitReal(str);
         double profitRealPercent = getProfitRealPercent(str);
 
-        resultService.incrementsResult(str.getName(), profitWOFee);
-
         double bank = resultService.getBank(str.getName());
         double dayProfit = resultService.getDayMoney(str.getName());
 
@@ -131,6 +129,8 @@ public class StrategyServiceImpl implements StrategyService {
                 + getStatString("-", str.getLoseMax(), leverage)
                 + getStatString("+", str.getProfitMax(), leverage)
                 + STR."\n\nБанк: \{bank}$ (\{dayProfit}$)";
+
+        resultService.incrementsResult(str.getName(), profitWOFee);
 
         return result;
     }

@@ -143,30 +143,20 @@ public class MaxChangeSimpleStrategy extends Strategy {
 
     @Override
     public String getMessageForSendOpenPosition(double sumWithLeverage, double percent, double sum, double percentOfSum, InstrumentService is, StrategyService ss) {
-        String isOpenClose = isOpen() ? "#open" : "#close";
-
-        Instrument instrument = is.getInstrumentByName(getInstrumentName());
-        Candlestick cndst = instrument.getCandlestickList().getFirst();
-
         double pavg = Utilities.roundDouble(getAllPrices() / getAllQuantity());
-        double cndstPriceOpen = cndst.getPriceOpen();
-        double currentPrice = instrument.getCurrentPrice();
-        double profit = ss.getPriceChangePercent(cndstPriceOpen, currentPrice);
-
-        String direction = currentPrice > cndstPriceOpen ? "⬆ " : "⬇ ";
 
         return STR."""
-        #\{getName()} #\{getSide()} \{isOpenClose}
-
+        #\{getName()} #\{getSide()} #open
         #\{getInstrumentName()} PO: \{getPriceOpen()} PAVG: \{ pavg }
-
-        Ставка: \{sumWithLeverage} Вся ставка: \{getAllBetSum()}
-
-        AllPrices: \{Utilities.roundDouble(getAllPrices())} AllQuantity: \{getAllQuantity()}
-
-        \{direction} \{Utilities.roundDouble(getPreviousPriceOpen())} -> \{Utilities.roundDouble(currentPrice)} (\{Utilities.roundDouble(profit)}%) | \{instrument.getMaxChange()}
-
         \{getInstrumentName()}: \{percent}% | \{sum}$ | \{percentOfSum}%""";
+    }
+
+    @Override
+    public String getMessageForSendClosePosition(String result, double sumWithLeverage, double percent, double sum, double percentOfSum) {
+        return STR."""
+        #\{getName()} #\{getSide()} #close
+        #\{getInstrumentName()} PO: \{getPriceOpen()} \{result}
+        \{percent}% | \{sum}$ | \{percentOfSum}%""";
     }
 
     public double getAllQuantity() {

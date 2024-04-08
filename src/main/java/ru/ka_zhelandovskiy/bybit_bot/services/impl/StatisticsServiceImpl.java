@@ -1,6 +1,7 @@
 package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.ka_zhelandovskiy.bybit_bot.models.StatisticsModel;
 import ru.ka_zhelandovskiy.bybit_bot.repository.StatisticsRepository;
@@ -8,6 +9,7 @@ import ru.ka_zhelandovskiy.bybit_bot.services.StatisticsService;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class StatisticsServiceImpl implements StatisticsService {
@@ -27,6 +29,8 @@ public class StatisticsServiceImpl implements StatisticsService {
         sm.setResult(result);
         sm.setMaxProfit(s.getProfitMax());
         sm.setMaxLose(s.getLoseMax());
+
+        log.info(STR."SAVE RECORD TO STATISTICS: \{sm.toString()}");
 
         return statisticsRepository.save(sm);
     }
