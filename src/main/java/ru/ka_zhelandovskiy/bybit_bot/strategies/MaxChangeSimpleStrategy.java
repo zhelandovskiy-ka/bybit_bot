@@ -40,6 +40,7 @@ public class MaxChangeSimpleStrategy extends Strategy {
         super(strategy);
         this.slShift = (Double) strategy.getParameters().get("slShift");
         this.miniSL = (Double) strategy.getParameters().get("miniSL");
+        System.out.println("SHIFT: " + strategy.getParameters().get("shift"));
         this.shift = (Double) strategy.getParameters().get("shift");
     }
 

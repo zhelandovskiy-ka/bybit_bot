@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
 import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
+import ru.ka_zhelandovskiy.bybit_bot.strategies.MaxChangeSimpleStrategy;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.MaxChangeStrategy;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 import ru.ka_zhelandovskiy.bybit_bot.util.StrategyName;
@@ -53,6 +54,9 @@ public class ISServiceImpl implements ISService {
             switch (strategy.getType()) {
                 case StrategyName.maxChange -> {
                     finalStrategyList.add(new MaxChangeStrategy(strategy));
+                }
+                case StrategyName.maxChangeSimple -> {
+                    finalStrategyList.add(new MaxChangeSimpleStrategy(strategy));
                 }
             }
         });
