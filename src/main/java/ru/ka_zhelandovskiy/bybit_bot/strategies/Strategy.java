@@ -76,7 +76,7 @@ public class Strategy {
         String isOpenClose = isOpen() ? "#open" : "#close";
 
         return STR."""
-        #\{getName()} #\{getSide()} #\{isOpenClose}
+        #\{getName()} #\{getSide()} \{isOpenClose}
 
         #\{getInstrumentName()} PO: \{getPriceOpen()} \{result}
 
