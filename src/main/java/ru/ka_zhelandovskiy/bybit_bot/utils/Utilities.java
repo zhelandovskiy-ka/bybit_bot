@@ -2,6 +2,8 @@ package ru.ka_zhelandovskiy.bybit_bot.utils;
 
 public class Utilities {
     public static double roundDouble(double d) {
+        if (d < 1)
+            return Math.round(d * 10000.0) / 10000.0;
         if (d < 20)
             return Math.round(d * 1000.0) / 1000.0;
         return Math.round(d * 100.0) / 100.0;

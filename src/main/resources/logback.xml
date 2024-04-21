@@ -15,13 +15,6 @@
             <fileNamePattern>logs/%d{yyyy-MM-dd, aux}/log-%d{yyyy-MM-dd_HH}.log</fileNamePattern>
 <!--            <maxHistory>24</maxHistory>-->
         </rollingPolicy>
-
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>logs/%d{yyyy-MM-dd}/log-%d{yyyy-MM-dd_HH}.log</fileNamePattern>
-            <maxHistory>24</maxHistory>
-            <totalSizeCap>1GB</totalSizeCap> <!-- Пример ограничения общего размера -->
-        </rollingPolicy>
-
     </appender>
 
     <!-- Установка корневого логгера -->

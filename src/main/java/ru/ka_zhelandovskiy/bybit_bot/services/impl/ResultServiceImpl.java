@@ -11,6 +11,8 @@ import ru.ka_zhelandovskiy.bybit_bot.services.ParameterService;
 import ru.ka_zhelandovskiy.bybit_bot.services.ResultService;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
+import java.util.List;
+
 @Slf4j
 @Service
 public class ResultServiceImpl implements ResultService {
@@ -68,7 +70,7 @@ public class ResultServiceImpl implements ResultService {
 
     @Override
     @Transactional
-    public void ResetDay(String name) {
+    public void resetDay(String name) {
         ResultsModel result = getResult(name);
         result.setDayMinus(0);
         result.setDayPlus(0);
@@ -121,5 +123,10 @@ public class ResultServiceImpl implements ResultService {
     @Override
     public double getDayMoney(String name) {
         return Utilities.roundDouble(resultsRepository.findByName(name).getDayMoney());
+    }
+
+    @Override
+    public List<ResultsModel> getAllResult() {
+        return resultsRepository.findAll();
     }
 }

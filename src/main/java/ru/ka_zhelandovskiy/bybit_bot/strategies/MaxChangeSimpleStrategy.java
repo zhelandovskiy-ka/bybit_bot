@@ -40,7 +40,6 @@ public class MaxChangeSimpleStrategy extends Strategy {
         super(strategy);
         this.slShift = (Double) strategy.getParameters().get("slShift");
         this.miniSL = (Double) strategy.getParameters().get("miniSL");
-        System.out.println("SHIFT: " + strategy.getParameters().get("shift"));
         this.shift = (Double) strategy.getParameters().get("shift");
     }
 
@@ -132,10 +131,10 @@ public class MaxChangeSimpleStrategy extends Strategy {
             log.info(STR."        TRUE | \{getInstrumentName()} setOpen(false) wasOpen(true)");
         }
 
-        log.info(STR."     \{getInstrumentName()} \{profitPercent} >= \{getTpPercent()} && \{profitPercent} > \{getSlPercent() + slShift}?");
+        log.info(STR."     \{getInstrumentName()} \{priceChangePercentStart} >= \{getTpPercent()} && \{priceChangePercentStart} > \{getSlPercent() + slShift}?");
 
-        if (profitPercent >= getTpPercent() && profitPercent > getSlPercent() + slShift) {
-            setSlPercent(profitPercent - slShift);
+        if (priceChangePercentStart >= getTpPercent() && priceChangePercentStart > getSlPercent() + slShift) {
+            setSlPercent(priceChangePercentStart - slShift);
             log.info(STR."        TRUE | SET NEW SL PERCENT: \{profitPercent} - \{slShift} = \{getSlPercent()}");
         }
 

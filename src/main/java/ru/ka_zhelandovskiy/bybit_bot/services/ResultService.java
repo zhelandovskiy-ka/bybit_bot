@@ -3,12 +3,14 @@ package ru.ka_zhelandovskiy.bybit_bot.services;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 import ru.ka_zhelandovskiy.bybit_bot.models.ResultsModel;
 
+import java.util.List;
+
 public interface ResultService {
     ResultsModel getResult(String name);
 
     void incrementsResult(String name, double sum);
 
-    void ResetDay(String name);
+    void resetDay(String name);
 
     void sendDayStats(Strategy str);
 
@@ -21,5 +23,7 @@ public interface ResultService {
     double getMaxLose(String name);
 
     double getDayMoney(String name);
+
+    List<ResultsModel> getAllResult();
 
 }

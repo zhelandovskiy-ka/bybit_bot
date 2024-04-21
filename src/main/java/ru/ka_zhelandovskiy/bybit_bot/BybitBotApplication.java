@@ -26,6 +26,7 @@ public class BybitBotApplication {
     InstrumentService instrumentService;
     @Autowired
     BybitService bybitService;
+
     public static void main(String[] args) {
         SpringApplicationBuilder builder = new SpringApplicationBuilder(BybitBotApplication.class);
         builder.headless(false);
