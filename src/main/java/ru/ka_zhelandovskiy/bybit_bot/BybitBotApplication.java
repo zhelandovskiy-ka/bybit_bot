@@ -40,7 +40,7 @@ public class BybitBotApplication {
     @Autowired
     SmaResultsService smaResultsService;
 
-    @Value("${config.test-mode}")
+    @Value("${config.test-mode:false}")
     boolean testMode;
 
     public static void main(String[] args) {
