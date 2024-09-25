@@ -1,11 +1,6 @@
 pipeline {
     agent any
 
-    enviroment {
-        SPRING_DATASOURCE_URL = credentials('SPRING_DATASOURCE_URL')
-        SPRING_DATASOURCE_CREDS = credentials('SPRING_DATASOURCE_CREDS')
-    }
-
     stages {
         stage('Clone repository') {
             steps {
@@ -13,13 +8,17 @@ pipeline {
             }
         }
 
-        stage ('Build') {
+        stage('Build') {
             steps {
                 sh 'mvn clean install'
             }
         }
 
         stage('Deploy') {
+            enviroment {
+                SPRING_DATASOURCE_URL = credentials('SPRING_DATASOURCE_URL')
+                SPRING_DATASOURCE_CREDS = credentials('SPRING_DATASOURCE_CREDS')
+            }
 
             steps {
                 echo "${SPRING_DATASOURCE_CREDS_USR}"
