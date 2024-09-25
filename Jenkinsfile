@@ -23,7 +23,7 @@ pipeline {
             steps {
                 echo "${SPRING_DATASOURCE_CREDS_USR}"
                 echo "${SPRING_DATASOURCE_CREDS_PSW}"
-                echo "${SPRING_DATASOURCE_CREDS_URL}"
+                echo "${SPRING_DATASOURCE_URL}"
                 sh 'java --enable-preview -jar target/bybit_bot-1.0.0-SNAPSHOT.jar'
             }
         }
