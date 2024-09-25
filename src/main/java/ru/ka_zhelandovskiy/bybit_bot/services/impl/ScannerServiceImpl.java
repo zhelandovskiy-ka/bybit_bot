@@ -14,6 +14,7 @@ public class ScannerServiceImpl implements ScannerService {
     private final ParameterService parameterService;
     private final BybitService bybitService;
     private final StatisticsService statisticsService;
+    private final ResultService resultService;
 
     private final ISService isService;
 
@@ -37,19 +38,19 @@ public class ScannerServiceImpl implements ScannerService {
                     boolean checkToClose = false;
 
                     if (!str.isOpen()) {
-                        log.info(STR."  CHECK TO OPEN: \{str.getName()} \{instrumentName} \{str.getSide()}");
+                        log.info(STR."  CHECK TO OPEN: \{str.getName()} \{instrumentName}");
 
                         checkToOpen = str.checkToOpen(isService);
 
-                        log.info(STR."  RETURN \{checkToOpen}");
-
+                        log.info(STR."  RETURN \{checkToOpen} \{str.getSide()}");
                     }
+
                     if (str.isOpen()) {
-                        log.info(STR."  CHECK TO CLOSE: \{str.getName()} \{instrumentName} \{str.getSide()}");
+                        log.info(STR."  CHECK TO CLOSE: \{str.getName()} \{instrumentName}");
 
                         checkToClose = str.checkToClose(isService);
 
-                        log.info(STR."  RETURN \{checkToClose}");
+                        log.info(STR."  RETURN \{checkToClose} \{str.getSide()}");
                     }
 
                     if (checkToOpen) {
@@ -75,6 +76,7 @@ public class ScannerServiceImpl implements ScannerService {
 
                         strategyService.calcMaxProfitLosePercent(str);
                         strategyService.calcProfitSum(str);
+                        resultService.incrementsResult(str.getName(), str.getProfitSumWoFee());
                         statisticsService.addRecord(str);
                         strategyService.send(str);
                         strategyService.resetSLTPPercent(str);

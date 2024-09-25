@@ -2,8 +2,11 @@ package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.ka_zhelandovskiy.bybit_bot.configurations.TelegramConfig;
+import ru.ka_zhelandovskiy.bybit_bot.dto.ResultSumDto;
+import ru.ka_zhelandovskiy.bybit_bot.mapper.ResultMapper;
+import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
+import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 import ru.ka_zhelandovskiy.bybit_bot.models.ResultsModel;
 import ru.ka_zhelandovskiy.bybit_bot.repository.ResultsRepository;
@@ -11,6 +14,7 @@ import ru.ka_zhelandovskiy.bybit_bot.services.ParameterService;
 import ru.ka_zhelandovskiy.bybit_bot.services.ResultService;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -31,24 +35,50 @@ public class ResultServiceImpl implements ResultService {
 
     @Override
     public ResultsModel getResult(String name) {
-        return resultsRepository.findByName(name);
+        ResultsModel result = resultsRepository.findByName(name);
+
+        if (result == null) {
+            ResultsModel resultsModel = new ResultsModel();
+            resultsModel.setName(name);
+
+            return resultsRepository.save(resultsModel);
+        }
+
+        return result;
     }
 
     @Override
-    @Transactional
+    public ResultsModel getOrInsert(String name) {
+        ResultsModel resultsModel = getResult(name);
+        if (resultsModel == null) {
+            resultsModel = new ResultsModel();
+            resultsModel.setName(name);
+            return resultsRepository.save(resultsModel);
+        }
+        return resultsModel;
+    }
+
+    @Override
+    public ResultsModel save(ResultsModel resultsModel) {
+        return resultsRepository.save(resultsModel);
+    }
+
+    @Override
     public void incrementsResult(String name, double sum) {
         ResultsModel result = getResult(name);
 
         if (sum < 0) {
             result.setDayMinus(result.getDayMinus() + 1);
             result.setAllMinus(result.getAllMinus() + 1);
-            result.setAllMinusMoney(result.getAllMinusMoney() + 1);
+            result.setAllMinusMoney(result.getAllMinusMoney() + sum);
+            result.setAvgLose(result.getAllMinusMoney() / result.getAllMinus());
         }
 
         if (sum > 0) {
             result.setDayPlus(result.getDayPlus() + 1);
             result.setAllPlus(result.getAllPlus() + 1);
-            result.setAllPlusMoney(result.getAllPlusMoney() + 1);
+            result.setAllPlusMoney(result.getAllPlusMoney() + sum);
+            result.setAvgWin(result.getAllPlusMoney() / result.getAllPlus());
         }
 
         if (sum != 0) {
@@ -63,13 +93,12 @@ public class ResultServiceImpl implements ResultService {
         if (profit < 0)
             result.setMaxLose(Math.min(result.getMaxLose(), profit));
 
-        log.info(STR."SAVE RESULT: \{result.toString()}");
+        ResultsModel savedResult = resultsRepository.save(result);
 
-        resultsRepository.save(result);
+        log.info(STR."SAVE RESULT: \{savedResult.toString()}");
     }
 
     @Override
-    @Transactional
     public void resetDay(String name) {
         ResultsModel result = getResult(name);
         result.setDayMinus(0);

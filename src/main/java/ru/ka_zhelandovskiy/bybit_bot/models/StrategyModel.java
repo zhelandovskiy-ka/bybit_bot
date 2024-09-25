@@ -2,13 +2,16 @@ package ru.ka_zhelandovskiy.bybit_bot.models;
 
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
-@Data
+
+@Getter
+@Setter
+@ToString
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "strategies")
-@ToString
 public class StrategyModel {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

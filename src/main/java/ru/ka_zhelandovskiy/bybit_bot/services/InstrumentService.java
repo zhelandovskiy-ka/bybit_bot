@@ -14,7 +14,7 @@ public interface InstrumentService {
 
     List<Instrument> getInstrumentList();
 
-    void refreshCandlesticks();
+    void refreshCandlesticks(int limit);
 
     String getQuantity(String symbol);
 

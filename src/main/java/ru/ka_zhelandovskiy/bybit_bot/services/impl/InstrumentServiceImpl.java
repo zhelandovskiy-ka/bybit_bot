@@ -1,5 +1,6 @@
 package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 
+import com.bybit.api.client.domain.market.MarketInterval;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -62,10 +63,10 @@ public class InstrumentServiceImpl implements InstrumentService {
     }
 
     @Override
-    public void refreshCandlesticks() {
+    public void refreshCandlesticks(int limit) {
         log.info("start refreshCandlesticks");
 
-        instrumentList.forEach(i -> i.setCandlestickList(bybitService.getCandleStickHistory(i.getSymbol(), 60)));
+        instrumentList.forEach(i -> i.setCandlestickList(bybitService.getCandleStickHistory(i.getSymbol(), limit, null)));
 
         log.info("end refreshCandlesticks");
     }
@@ -80,6 +81,7 @@ public class InstrumentServiceImpl implements InstrumentService {
 
         return String.valueOf(Utilities.roundDouble(sum, quantityPrecision));
     }
+
     @Override
     public double getSumWithLeverage(SumType sumType, String symbol) {
         int leverage = getInstrumentByName(symbol).getLeverage();

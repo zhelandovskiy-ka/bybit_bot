@@ -18,6 +18,7 @@ public class Strategy {
     private String instrumentName;
     private String channelId;
     private String type;
+    private int timeFrame;
     private double priceOpen;
     private double previousPriceOpen;
     private double priceClose;

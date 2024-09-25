@@ -5,9 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
 import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
-import ru.ka_zhelandovskiy.bybit_bot.strategies.MaxChangeSimpleStrategy;
-import ru.ka_zhelandovskiy.bybit_bot.strategies.MaxChangeStrategy;
-import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
+import ru.ka_zhelandovskiy.bybit_bot.strategies.*;
 import ru.ka_zhelandovskiy.bybit_bot.util.StrategyName;
 
 import java.util.ArrayList;
@@ -50,14 +48,12 @@ public class ISServiceImpl implements ISService {
 
     void generateStrategyList() {
         strategyList.forEach(strategy -> {
-
             switch (strategy.getType()) {
-                case StrategyName.maxChange -> {
-                    finalStrategyList.add(new MaxChangeStrategy(strategy));
-                }
-                case StrategyName.maxChangeSimple -> {
-                    finalStrategyList.add(new MaxChangeSimpleStrategy(strategy));
-                }
+                case StrategyName.maxChange -> finalStrategyList.add(new MaxChangeStrategy(strategy));
+                case StrategyName.maxChangeSimple -> finalStrategyList.add(new MaxChangeSimpleStrategy(strategy));
+                case StrategyName.maxChangeNew -> finalStrategyList.add(new MaxChangeNewStrategy(strategy));
+                case StrategyName.scalpStrategy -> finalStrategyList.add(new ScalpMinMaxVolStrategy(strategy));
+                case StrategyName.smaStrategy -> finalStrategyList.add(new CrossSmaStrategy(strategy));
             }
         });
     }

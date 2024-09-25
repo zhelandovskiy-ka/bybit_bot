@@ -1,21 +1,26 @@
 package ru.ka_zhelandovskiy.bybit_bot.models;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
-@Data
+
 @Entity
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @ToString
 @Table(name = "statistics")
 public class StatisticsModel {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int number;
-    @Temporal(TemporalType.TIMESTAMP)
-    private Date date;
+    @CreationTimestamp
+    private LocalDateTime date;
     private String strategy;
     private String side;
     private String instrument;
@@ -25,9 +30,4 @@ public class StatisticsModel {
     private int result;
     private double maxProfit;
     private double maxLose;
-
-    @PrePersist
-    protected void onCreate() {
-        date = new Date();
-    }
 }

@@ -17,4 +17,8 @@ public class Utilities {
 
         return Double.parseDouble(s);
     }
+
+    public static double getChangePercent(double d1, double d2) {
+        return (d2 - d1) / d1 * 100;
+    }
 }
