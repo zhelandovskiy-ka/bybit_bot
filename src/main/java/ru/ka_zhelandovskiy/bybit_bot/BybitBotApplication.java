@@ -19,7 +19,6 @@ import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.ScannerService;
 import ru.ka_zhelandovskiy.bybit_bot.services.SmaResultsService;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
-import ru.ka_zhelandovskiy.bybit_bot.view.NotForm;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -43,8 +42,6 @@ public class BybitBotApplication {
 
     @Value("${config.test-mode}")
     boolean testMode;
-
-    public static NotForm notForm = new NotForm();
 
     public static void main(String[] args) {
         SpringApplicationBuilder builder = new SpringApplicationBuilder(BybitBotApplication.class);
