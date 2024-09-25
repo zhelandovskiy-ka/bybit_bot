@@ -15,7 +15,7 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                sh 'java -jar target/bybit_bot-1.0.0-SNAPSHOT.jar'
+                sh 'java --enable-preview -jar target/bybit_bot-1.0.0-SNAPSHOT.jar'
             }
         }
     }
