@@ -14,7 +14,7 @@ import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "${config.url}")
+@CrossOrigin(origins = "${config.url:http://localhost:8081}")
 @RequiredArgsConstructor
 @RestController
 @RequestMapping
