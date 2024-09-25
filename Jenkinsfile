@@ -20,6 +20,7 @@ pipeline {
                 SPRING_DATASOURCE_CREDS = credentials('SPRING_DATASOURCE_CREDS')
                 SPRING_DATASOURCE_USERNAME = "${SPRING_DATASOURCE_CREDS_USR}"
                 SPRING_DATASOURCE_PASSWORD = "${SPRING_DATASOURCE_CREDS_PSW}"
+                SERVER_PORT = '8082'
             }
 
             steps {
