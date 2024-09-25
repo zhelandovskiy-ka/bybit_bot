@@ -15,7 +15,7 @@ pipeline {
         }
 
         stage('Deploy') {
-            enviroment {
+            environment  {
                 SPRING_DATASOURCE_URL = credentials('SPRING_DATASOURCE_URL')
                 SPRING_DATASOURCE_CREDS = credentials('SPRING_DATASOURCE_CREDS')
             }
