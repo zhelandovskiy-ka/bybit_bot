@@ -18,12 +18,11 @@ pipeline {
             environment  {
                 SPRING_DATASOURCE_URL = credentials('SPRING_DATASOURCE_URL')
                 SPRING_DATASOURCE_CREDS = credentials('SPRING_DATASOURCE_CREDS')
+                SPRING_DATASOURCE_USERNAME = "${SPRING_DATASOURCE_CREDS_USR}"
+                SPRING_DATASOURCE_PASSWORD = "${SPRING_DATASOURCE_CREDS_PSW}"
             }
 
             steps {
-                echo "${SPRING_DATASOURCE_CREDS_USR}"
-                echo "${SPRING_DATASOURCE_CREDS_PSW}"
-                echo "${SPRING_DATASOURCE_URL}"
                 sh 'java --enable-preview -jar target/bybit_bot-1.0.0-SNAPSHOT.jar'
             }
         }
