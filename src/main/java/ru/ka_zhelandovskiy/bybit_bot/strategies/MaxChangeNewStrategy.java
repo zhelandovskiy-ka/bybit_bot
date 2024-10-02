@@ -9,10 +9,14 @@ import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
+import java.util.ArrayList;
+import java.util.List;
+
 
 @Slf4j
 public class MaxChangeNewStrategy extends Strategy {
-    private boolean wasOpen = false;
+    private List<String> blackList;
+    private Double maxChangeShift;
 
     @Override
     public String toString() {
@@ -22,11 +26,15 @@ public class MaxChangeNewStrategy extends Strategy {
                 }, getSlPercent()=\{getSlPercent()
                 }, getTpPercent()=\{getTpPercent()
                 }, isActive()=\{isActive()
+                }, blackList()=\{this.blackList
+                }, maxChangeShift()=\{this.maxChangeShift
                 }}";
     }
 
     public MaxChangeNewStrategy(Strategy strategy) {
         super(strategy);
+        this.blackList = (List<String>) strategy.getParameters().get("blackList");
+        this.maxChangeShift = ((Number) strategy.getParameters().get("maxChangeShift")).doubleValue();
     }
 
     @Override
@@ -35,12 +43,16 @@ public class MaxChangeNewStrategy extends Strategy {
         StrategyService ss = isService.getStrategyService();
 
         Instrument instrument = is.getInstrumentByName(getInstrumentName());
+
+        if (inBlackList(instrument.getSymbol()))
+            return false;
+
         double currentPrice = instrument.getCurrentPrice();
 
         Candlestick cndst = instrument.getCandlestickList().getFirst();
 
         double priceChange = ss.getPriceChangePercent(cndst.getPriceOpen(), currentPrice);
-        double maxChange = instrument.getMaxChange();
+        double maxChange = instrument.getMaxChange() + (instrument.getMaxChange() * maxChangeShift);
 
         boolean conditionToOpen = priceChange >= maxChange;
         log.info(STR."    current price: \{currentPrice}");
@@ -106,5 +118,10 @@ public class MaxChangeNewStrategy extends Strategy {
         \{direction} \{Utilities.roundDouble(getPreviousPriceOpen())} -> \{Utilities.roundDouble(currentPrice)} (\{Utilities.roundDouble(profit)}%) | \{instrument.getMaxChange()}
 
         \{getInstrumentName()}: \{percent}% | \{sum}$ | \{percentOfSum}%""";
+    }
+
+    private boolean inBlackList(String instrument) {
+        return blackList.stream()
+                .anyMatch(inst -> inst.equals(instrument));
     }
 }

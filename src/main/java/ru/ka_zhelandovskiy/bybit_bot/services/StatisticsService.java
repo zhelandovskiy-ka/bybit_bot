@@ -1,5 +1,6 @@
 package ru.ka_zhelandovskiy.bybit_bot.services;
 
+import ru.ka_zhelandovskiy.bybit_bot.dto.SideProfitDto;
 import ru.ka_zhelandovskiy.bybit_bot.models.StatisticsModel;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 
@@ -42,4 +43,8 @@ public interface StatisticsService {
     List<Double> getBankDaySum(String strategyName);
 
     Map<String, Double> getProfitSumByAllInstruments(String strategyName);
+
+    Map<String, Double> getProfitSidesByStrategy(String strategyName);
+
+    List<SideProfitDto> getProfitSidesByStrategyAndInstruments(String strategyName);
 }

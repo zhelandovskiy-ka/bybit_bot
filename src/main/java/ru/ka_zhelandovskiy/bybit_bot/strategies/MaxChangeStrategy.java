@@ -14,10 +14,10 @@ import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 @Data
 @Slf4j
 public class MaxChangeStrategy extends Strategy {
-    private double allQuantity = 0;
-    private double allPrices = 0;
     private double slShift;
     private double miniSL;
+    private double allQuantity = 0;
+    private double allPrices = 0;
     private double firstOpenPrice;
     private boolean wasOpen = false;
 
@@ -75,7 +75,7 @@ public class MaxChangeStrategy extends Strategy {
             setAllQuantity(getAllQuantity() + quantity);
             setAllBetSum(getAllBetSum() + is.getSumWithLeverage(SumType.sum, getInstrumentName()));
             setPreviousPriceOpen(getPriceOpen());
-            setPriceOpen(instrument.getCurrentPrice());
+            setPriceOpen(currentPrice);
 
             if (getFirstOpenPrice() == 0) {
                 setFirstOpenPrice(currentPrice);
@@ -98,9 +98,6 @@ public class MaxChangeStrategy extends Strategy {
     @Override
     public boolean checkToClose(ISService isService) {
         StrategyService ss = isService.getStrategyService();
-//        InstrumentService is = isService.getInstrumentService();
-
-//        double currentPrice = is.getInstrumentByName(getInstrumentName()).getCurrentPrice();
 
         double priceChangePercentStart = ss.getProfitPercent(this, firstOpenPrice);
 
@@ -114,7 +111,6 @@ public class MaxChangeStrategy extends Strategy {
 
             setAllPrices(0);
             setAllQuantity(0);
-//            setPriceOpen(0);
             setFirstOpenPrice(0);
             setPreviousPriceOpen(0);
 

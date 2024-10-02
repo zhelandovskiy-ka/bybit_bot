@@ -1,10 +1,10 @@
 package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 
+import com.bybit.api.client.domain.trade.Side;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import ru.ka_zhelandovskiy.bybit_bot.dto.SideProfitDto;
 import ru.ka_zhelandovskiy.bybit_bot.models.StatisticsModel;
 import ru.ka_zhelandovskiy.bybit_bot.repository.StatisticsRepository;
 import ru.ka_zhelandovskiy.bybit_bot.services.StatisticsService;
@@ -12,10 +12,8 @@ import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -149,12 +147,54 @@ public class StatisticsServiceImpl implements StatisticsService {
 
         Map<String, Double> instrumentsProfit = new HashMap<>();
 
-        for (int i = 0; i < statisticsModelList.size(); i++) {
-            StatisticsModel statisticsModel = statisticsModelList.get(i);
+        for (StatisticsModel statisticsModel : statisticsModelList) {
             instrumentsProfit.merge(statisticsModel.getInstrument(), statisticsModel.getProfit(), Double::sum);
         }
 
         return instrumentsProfit;
+    }
+
+    @Override
+    public Map<String, Double> getProfitSidesByStrategy(String strategyName) {
+        List<StatisticsModel> statisticsModelList = statisticsRepository.findByStrategy(strategyName);
+
+        Map<String, Double> sidesProfit = new HashMap<>();
+
+        for (StatisticsModel statisticsModel : statisticsModelList) {
+            sidesProfit.merge(statisticsModel.getSide(), statisticsModel.getProfit(), Double::sum);
+        }
+
+        return sidesProfit;
+    }
+
+    @Override
+    public List<SideProfitDto> getProfitSidesByStrategyAndInstruments(String strategyName) {
+        List<StatisticsModel> statisticsModelList = statisticsRepository.findByStrategy(strategyName);
+
+        Set<String> instrumentNames = statisticsModelList.stream()
+                .map(StatisticsModel::getInstrument)
+                .collect(Collectors.toSet());
+
+        List<SideProfitDto> sideProfitDtos = new ArrayList<>();
+
+        instrumentNames.forEach(instrument -> {
+            Map<String, Double> sidesProfit = new HashMap<>();
+            for (StatisticsModel statisticsModel : statisticsModelList) {
+                if (statisticsModel.getInstrument().equals(instrument))
+                    sidesProfit.merge(statisticsModel.getSide(), statisticsModel.getProfit(), Double::sum);
+            }
+
+            Double sumBuy = sidesProfit.get(Side.BUY.getTransactionSide());
+            Double sumSell = sidesProfit.get(Side.SELL.getTransactionSide());
+
+            sideProfitDtos.add(new SideProfitDto(
+                    instrument,
+                    sumBuy == null ? 0 : sumBuy,
+                    sumSell == null ? 0 : sumSell
+            ));
+        });
+
+        return sideProfitDtos;
     }
 
     public static Double getFirstNotNull(Map<Integer, Double> map) {

@@ -135,7 +135,7 @@ public class MaxChangeSimpleStrategy extends Strategy {
 
         if (priceChangePercentStart >= getTpPercent() && priceChangePercentStart > getSlPercent() + slShift) {
             setSlPercent(priceChangePercentStart - slShift);
-            log.info(STR."        TRUE | SET NEW SL PERCENT: \{profitPercent} - \{slShift} = \{getSlPercent()}");
+            log.info(STR."        TRUE | SET NEW SL PERCENT: \{priceChangePercentStart} - \{slShift} = \{getSlPercent()}");
         }
 
         return false;
