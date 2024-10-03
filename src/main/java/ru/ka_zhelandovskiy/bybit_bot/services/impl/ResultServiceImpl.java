@@ -1,20 +1,17 @@
 package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import ru.ka_zhelandovskiy.bybit_bot.configurations.TelegramConfig;
-import ru.ka_zhelandovskiy.bybit_bot.dto.ResultSumDto;
-import ru.ka_zhelandovskiy.bybit_bot.mapper.ResultMapper;
-import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
-import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
+import ru.ka_zhelandovskiy.bybit_bot.models.StatisticsModel;
+import ru.ka_zhelandovskiy.bybit_bot.services.*;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 import ru.ka_zhelandovskiy.bybit_bot.models.ResultsModel;
 import ru.ka_zhelandovskiy.bybit_bot.repository.ResultsRepository;
-import ru.ka_zhelandovskiy.bybit_bot.services.ParameterService;
-import ru.ka_zhelandovskiy.bybit_bot.services.ResultService;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -23,11 +20,13 @@ public class ResultServiceImpl implements ResultService {
     private final ResultsRepository resultsRepository;
     private final ParameterService parameterService;
     private final TelegramConfig telegramConfig;
+    private final StatisticsService statisticsService;
 
-    public ResultServiceImpl(ResultsRepository resultsRepository, ParameterService parameterService, TelegramConfig telegramConfig) {
+    public ResultServiceImpl(ResultsRepository resultsRepository, ParameterService parameterService, TelegramConfig telegramConfig, StatisticsService statisticsService) {
         this.resultsRepository = resultsRepository;
         this.parameterService = parameterService;
         this.telegramConfig = telegramConfig;
+        this.statisticsService = statisticsService;
 
         System.out.println("RESULTS: ");
         resultsRepository.findAll().forEach(System.out::println);
@@ -157,5 +156,39 @@ public class ResultServiceImpl implements ResultService {
     @Override
     public List<ResultsModel> getAllResult() {
         return resultsRepository.findAll();
+    }
+
+    @Override
+    public ResultsModel undoResult(int id) {
+        StatisticsModel statisticsModel = statisticsService.getByNumber(id);
+        double profit = statisticsModel.getProfit();
+        String strategy = statisticsModel.getStrategy();
+        int result = statisticsModel.getResult();
+
+        ResultsModel resultsModel = resultsRepository.findById(strategy).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "result not found"));
+
+        if (result == 0) {
+            resultsModel.setDayMinus(resultsModel.getDayMinus() - 1);
+            resultsModel.setAllMinus(resultsModel.getAllMinus() - 1);
+            resultsModel.setAllMinusMoney(resultsModel.getAllMinusMoney() - profit);
+            resultsModel.setAvgLose(resultsModel.getAllMinusMoney() / resultsModel.getAllMinus());
+            resultsModel.setMaxLose(resultsModel.getMaxLose() - profit);
+        }
+
+        if (result == 1) {
+            resultsModel.setDayPlus(resultsModel.getDayPlus() - 1);
+            resultsModel.setAllPlus(resultsModel.getAllPlus() - 1);
+            resultsModel.setAllPlusMoney(resultsModel.getAllPlusMoney() - profit);
+            resultsModel.setAvgWin(resultsModel.getAllPlusMoney() / resultsModel.getAllPlus());
+            resultsModel.setMaxProfit(resultsModel.getMaxProfit() - profit);
+        }
+
+        resultsModel.setBank(resultsModel.getBank() - profit);
+        resultsModel.setDayMoney(resultsModel.getDayMoney() - profit);
+
+        statisticsService.deleteRecord(id);
+
+        return resultsRepository.save(resultsModel);
     }
 }

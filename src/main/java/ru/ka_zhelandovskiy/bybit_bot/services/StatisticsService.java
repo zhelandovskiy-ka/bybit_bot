@@ -13,6 +13,8 @@ public interface StatisticsService {
      */
     StatisticsModel addRecord(Strategy strategy);
 
+    boolean deleteRecord(int id);
+
     /**
      * Получить процент проходимости по названию инструмента и стратегии
      */
@@ -47,4 +49,6 @@ public interface StatisticsService {
     Map<String, Double> getProfitSidesByStrategy(String strategyName);
 
     List<SideProfitDto> getProfitSidesByStrategyAndInstruments(String strategyName);
+
+    StatisticsModel getByNumber(int id);
 }

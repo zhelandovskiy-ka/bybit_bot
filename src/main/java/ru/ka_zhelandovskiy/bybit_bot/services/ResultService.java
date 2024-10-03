@@ -1,6 +1,5 @@
 package ru.ka_zhelandovskiy.bybit_bot.services;
 
-import ru.ka_zhelandovskiy.bybit_bot.dto.ResultSumDto;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 import ru.ka_zhelandovskiy.bybit_bot.models.ResultsModel;
 
@@ -30,4 +29,6 @@ public interface ResultService {
     double getDayMoney(String name);
 
     List<ResultsModel> getAllResult();
+
+    ResultsModel undoResult(int id);
 }

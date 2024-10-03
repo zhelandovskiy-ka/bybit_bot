@@ -3,7 +3,9 @@ package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 import com.bybit.api.client.domain.trade.Side;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import ru.ka_zhelandovskiy.bybit_bot.dto.SideProfitDto;
 import ru.ka_zhelandovskiy.bybit_bot.models.StatisticsModel;
 import ru.ka_zhelandovskiy.bybit_bot.repository.StatisticsRepository;
@@ -39,6 +41,12 @@ public class StatisticsServiceImpl implements StatisticsService {
         log.info(STR."SAVE RECORD TO STATISTICS: \{sm.toString()}");
 
         return statisticsRepository.save(sm);
+    }
+
+    @Override
+    public boolean deleteRecord(int id) {
+        statisticsRepository.deleteById(id);
+        return true;
     }
 
     @Override
@@ -195,6 +203,12 @@ public class StatisticsServiceImpl implements StatisticsService {
         });
 
         return sideProfitDtos;
+    }
+
+    @Override
+    public StatisticsModel getByNumber(int id) {
+        return statisticsRepository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "record mot found"));
     }
 
     public static Double getFirstNotNull(Map<Integer, Double> map) {
