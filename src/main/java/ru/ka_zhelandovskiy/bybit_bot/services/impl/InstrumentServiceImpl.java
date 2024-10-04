@@ -72,12 +72,12 @@ public class InstrumentServiceImpl implements InstrumentService {
     }
 
     @Override
-    public String getQuantity(String symbol) {
+    public String getQuantity(String symbol, SumType sumType) {
         Instrument instrument = getInstrumentByName(symbol);
 
         int quantityPrecision = instrument.getQp();
         double price = instrument.getCurrentPrice();
-        double sum = getSumWithLeverage(SumType.real_sum, symbol) / price;
+        double sum = getSumWithLeverage(sumType, symbol) / price;
 
         return String.valueOf(Utilities.roundDouble(sum, quantityPrecision));
     }

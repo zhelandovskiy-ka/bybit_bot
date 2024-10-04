@@ -4,6 +4,7 @@ import com.bybit.api.client.domain.trade.Side;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.services.*;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 
@@ -90,7 +91,7 @@ public class ScannerServiceImpl implements ScannerService {
     private void checkForPlaceOrder(Strategy str, InstrumentService instrumentService) {
 
         if (!parameterService.isTestMode() && str.isActive()) {
-            String quantity = instrumentService.getQuantity(str.getInstrumentName());
+            String quantity = instrumentService.getQuantity(str.getInstrumentName(), SumType.real_sum);
             log.info(STR."TRY OPEN ORDER: \{str.getInstrumentName()} \{quantity} \{str.getSide()} \{str.getName()}");
 
             log.info(bybitService.placeOrder(str.getInstrumentName(), quantity, str.getSide()));

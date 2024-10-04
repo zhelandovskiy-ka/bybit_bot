@@ -70,7 +70,7 @@ public class MaxChangeSimpleStrategy extends Strategy {
         if (conditionToOpen) {
             wasOpen = false;
 
-            double quantity = Double.parseDouble(is.getQuantity(getInstrumentName()));
+            double quantity = Double.parseDouble(is.getQuantity(getInstrumentName(), SumType.sum));
 
             log.info(STR."    \{getInstrumentName()} conditionToOpen is \{conditionToOpen}");
             log.info(STR."    \{getInstrumentName()} \{getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()} (getAllPrices(), getAllQuantity(), getAllBetSum())");

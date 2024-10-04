@@ -66,10 +66,11 @@ public class MaxChangeStrategy extends Strategy {
         if (conditionToOpen) {
             wasOpen = false;
 
-            double quantity = Double.parseDouble(is.getQuantity(getInstrumentName()));
+            double quantity = Double.parseDouble(is.getQuantity(getInstrumentName(), SumType.sum));
 
             log.info(STR."    \{getInstrumentName()} conditionToOpen is \{conditionToOpen}");
             log.info(STR."    \{getInstrumentName()} \{getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()} (getAllPrices(), getAllQuantity(), getAllBetSum())");
+            log.info(STR."    \{getAllPrices()} + \{currentPrice} * \{quantity} (getAllPrices() + currentPrice * quantity");
 
             setAllPrices(getAllPrices() + (currentPrice * quantity));
             setAllQuantity(getAllQuantity() + quantity);
@@ -163,6 +164,11 @@ public class MaxChangeStrategy extends Strategy {
         \{direction} \{Utilities.roundDouble(getPreviousPriceOpen())} -> \{Utilities.roundDouble(currentPrice)} (\{Utilities.roundDouble(profit)}%) | \{instrument.getMaxChange()}
 
         \{getInstrumentName()}: \{percent}% | \{sum}$ | \{percentOfSum}%""";
+    }
+
+    @Override
+    public String getMessageForSendClosePosition(String result, double sumWithLeverage, double percent, double sum, double percentOfSum) {
+        return super.getMessageForSendClosePosition(result, getAllBetSum(), percent, sum, percentOfSum);
     }
 
     public double getAllQuantity() {

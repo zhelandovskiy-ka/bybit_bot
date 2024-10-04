@@ -16,7 +16,7 @@ public interface InstrumentService {
 
     void refreshCandlesticks(int limit);
 
-    String getQuantity(String symbol);
+    String getQuantity(String symbol, SumType sumType);
 
     double getSumWithLeverage(SumType sumType, String symbol);
 
