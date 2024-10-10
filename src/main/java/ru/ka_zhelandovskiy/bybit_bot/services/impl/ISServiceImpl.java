@@ -1,35 +1,52 @@
 package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 
 import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
 import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
+import ru.ka_zhelandovskiy.bybit_bot.services.StrategyStorageService;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.*;
 import ru.ka_zhelandovskiy.bybit_bot.util.StrategyName;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Service
 @Getter
 public class ISServiceImpl implements ISService {
     private final InstrumentService instrumentService;
     private final StrategyService strategyService;
+    private final StrategyStorageService strategyStorageService;
     private final List<Strategy> strategyList = new ArrayList<>();
-    private final List<Strategy> finalStrategyList = new ArrayList<>();
+    private List<Strategy> finalStrategyList = new ArrayList<>();
 
 
-    public ISServiceImpl(InstrumentService instrumentService, StrategyService strategyService) {
+    public ISServiceImpl(InstrumentService instrumentService, StrategyService strategyService, StrategyStorageService strategyStorageService) {
         this.instrumentService = instrumentService;
         this.strategyService = strategyService;
-        buildStrategyList();
+        this.strategyStorageService = strategyStorageService;
 
-        System.out.println("STRATEGY LIST V1");
-        strategyList.forEach(System.out::println);
+        if (!strategyStorageService.saveFileExist()) {
+            buildStrategyList();
 
-        generateStrategyList();
-        System.out.println("STRATEGY LIST V2");
+            log.info("SAVE FILE NOT FOUND");
+
+            log.info("STRATEGY LIST V1");
+            strategyList.forEach(System.out::println);
+
+            generateStrategyList();
+            log.info("STRATEGY LIST V2");
+        } else {
+            log.info("SAVE FILE FOUND, LOAD DATA");
+            List<Strategy> loaded = strategyStorageService.load();
+            setFinalStrategyList(loaded);
+        }
+
+        log.info("STRATEGY LIST:");
         finalStrategyList.forEach(System.out::println);
     }
 
@@ -56,5 +73,10 @@ public class ISServiceImpl implements ISService {
                 case StrategyName.smaStrategy -> finalStrategyList.add(new CrossSmaStrategy(strategy));
             }
         });
+    }
+
+    @Override
+    public void setFinalStrategyList(List<Strategy> strategyList) {
+        finalStrategyList = new ArrayList<>(strategyList);
     }
 }

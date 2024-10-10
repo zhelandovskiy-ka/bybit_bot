@@ -16,7 +16,7 @@ public class ScannerServiceImpl implements ScannerService {
     private final BybitService bybitService;
     private final StatisticsService statisticsService;
     private final ResultService resultService;
-
+    private final StrategyStorageService strategyStorageService;
     private final ISService isService;
 
     @Override
@@ -67,13 +67,8 @@ public class ScannerServiceImpl implements ScannerService {
                     if (checkToClose) {
                         str.setOpen(false);
                         str.setPriceClose(instrumentService.getCurrentPrice(str.getInstrumentName()));
-                        if (!parameterService.isTestMode() && str.getName().equals("maxCh_120SlMax")) {
-                            log.info(STR."TRY CLOSE ORDER: \{str.getInstrumentName()} \{str.getSide()} \{str.getName()}");
 
-                            Side side = str.getSide() == Side.BUY ? Side.SELL : Side.BUY;
-
-                            log.info(bybitService.closeOrder(str.getInstrumentName(), side));
-                        }
+                        checkForCloseOrder(str);
 
                         strategyService.calcMaxProfitLosePercent(str);
                         strategyService.calcProfitSum(str);
@@ -86,14 +81,25 @@ public class ScannerServiceImpl implements ScannerService {
 
                 });
         System.out.println("----------------------");
+        strategyStorageService.save(isService.getFinalStrategyList());
+        log.info("FILE SAVED");
+    }
+
+    private void checkForCloseOrder(Strategy str) {
+        if (!parameterService.isTestMode() && str.isAllowOrder()) {
+            log.info(STR."TRY CLOSE ORDER: \{str.getInstrumentName()} \{str.getSide()} \{str.getName()}");
+
+            Side side = str.getSide() == Side.BUY ? Side.SELL : Side.BUY;
+
+            log.info(bybitService.closeOrder(str.getInstrumentName(), side));
+        }
     }
 
     private void checkForPlaceOrder(Strategy str, InstrumentService instrumentService) {
 
-        if (!parameterService.isTestMode() && str.isActive()) {
+        if (!parameterService.isTestMode() && str.isAllowOrder()) {
             String quantity = instrumentService.getQuantity(str.getInstrumentName(), SumType.real_sum);
             log.info(STR."TRY OPEN ORDER: \{str.getInstrumentName()} \{quantity} \{str.getSide()} \{str.getName()}");
-
             log.info(bybitService.placeOrder(str.getInstrumentName(), quantity, str.getSide()));
         }
     }

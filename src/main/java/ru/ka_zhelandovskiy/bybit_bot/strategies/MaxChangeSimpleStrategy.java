@@ -1,7 +1,10 @@
 package ru.ka_zhelandovskiy.bybit_bot.strategies;
 
 import com.bybit.api.client.domain.trade.Side;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Candlestick;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Instrument;
@@ -13,6 +16,9 @@ import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
 @Data
 @Slf4j
+@AllArgsConstructor
+@NoArgsConstructor
+//@JsonTypeName("maxChangeSimple")
 public class MaxChangeSimpleStrategy extends Strategy {
     private double allQuantity = 0;
     private double allPrices = 0;
@@ -22,10 +28,19 @@ public class MaxChangeSimpleStrategy extends Strategy {
     private double firstOpenPrice;
     private boolean wasOpen = false;
 
+    public MaxChangeSimpleStrategy(Strategy strategy) {
+        super(strategy);
+        this.slShift = (Double) strategy.getParameters().get("slShift");
+        this.miniSL = (Double) strategy.getParameters().get("miniSL");
+        this.shift = (Double) strategy.getParameters().get("shift");
+        setType(strategy.getType());
+    }
+
     @Override
     public String toString() {
-        return STR."MaxChangeStrategy{getName()=\{getName()
+        return STR."MaxChangeSimpleStrategy{getName()=\{getName()
                 }, getInstrumentName()=\{getInstrumentName()
+                }, getType()=\{getType()
                 }, getChannelId()=\{getChannelId()
                 }, slShift=\{getShift()
                 }, slShift=\{getSlShift()
@@ -34,13 +49,6 @@ public class MaxChangeSimpleStrategy extends Strategy {
                 }, getTpPercent()=\{getTpPercent()
                 }, isActive()=\{isActive()
                 }}";
-    }
-
-    public MaxChangeSimpleStrategy(Strategy strategy) {
-        super(strategy);
-        this.slShift = (Double) strategy.getParameters().get("slShift");
-        this.miniSL = (Double) strategy.getParameters().get("miniSL");
-        this.shift = (Double) strategy.getParameters().get("shift");
     }
 
     @Override

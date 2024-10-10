@@ -1,6 +1,10 @@
 package ru.ka_zhelandovskiy.bybit_bot.strategies;
 
 import com.bybit.api.client.domain.trade.Side;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Candlestick;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Instrument;
@@ -9,14 +13,23 @@ import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
-
+@Data
 @Slf4j
+@AllArgsConstructor
+@NoArgsConstructor
+//@JsonTypeName("scalpStrategy")
 public class ScalpMinMaxVolStrategy extends Strategy {
     private boolean reverse;
 
+    public ScalpMinMaxVolStrategy(Strategy strategy) {
+        super(strategy);
+        this.reverse = (Boolean) strategy.getParameters().get("reverse");
+    }
+
     @Override
     public String toString() {
-        return STR."MaxChangeStrategy{getName()=\{getName()
+        return STR."ScalpMinMaxVolStrategy{getName()=\{getName()
+                }, getType()=\{getType()
                 }, getInstrumentName()=\{getInstrumentName()
                 }, getChannelId()=\{getChannelId()
                 }, getSlPercent()=\{getSlPercent()
@@ -24,11 +37,6 @@ public class ScalpMinMaxVolStrategy extends Strategy {
                 }, reverse()=\{this.reverse
                 }, isActive()=\{isActive()
                 }}";
-    }
-
-    public ScalpMinMaxVolStrategy(Strategy strategy) {
-        super(strategy);
-        this.reverse = (Boolean) strategy.getParameters().get("reverse");
     }
 
     @Override

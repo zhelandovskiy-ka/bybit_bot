@@ -1,7 +1,9 @@
 package ru.ka_zhelandovskiy.bybit_bot.strategies;
 
 import com.bybit.api.client.domain.trade.Side;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Candlestick;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Instrument;
@@ -13,6 +15,9 @@ import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
 @Data
 @Slf4j
+@AllArgsConstructor
+@NoArgsConstructor
+//@JsonTypeName("maxChange")
 public class MaxChangeStrategy extends Strategy {
     private double slShift;
     private double miniSL;
@@ -21,10 +26,17 @@ public class MaxChangeStrategy extends Strategy {
     private double firstOpenPrice;
     private boolean wasOpen = false;
 
+    public MaxChangeStrategy(Strategy strategy) {
+        super(strategy);
+        this.slShift = (Double) strategy.getParameters().get("slShift");
+        this.miniSL = (Double) strategy.getParameters().get("miniSL");
+    }
+
     @Override
     public String toString() {
         return STR."MaxChangeStrategy{getName()=\{getName()
                 }, getInstrumentName()=\{getInstrumentName()
+                }, getType()=\{getType()
                 }, getChannelId()=\{getChannelId()
                 }, slShift=\{slShift
                 }, miniSL=\{miniSL
@@ -32,12 +44,6 @@ public class MaxChangeStrategy extends Strategy {
                 }, getTpPercent()=\{getTpPercent()
                 }, isActive()=\{isActive()
                 }}";
-    }
-
-    public MaxChangeStrategy(Strategy strategy) {
-        super(strategy);
-        this.slShift = (Double) strategy.getParameters().get("slShift");
-        this.miniSL = (Double) strategy.getParameters().get("miniSL");
     }
 
     @Override

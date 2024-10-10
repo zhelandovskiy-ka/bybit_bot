@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.ka_zhelandovskiy.bybit_bot.configurations.IntervalsConfig;
 import ru.ka_zhelandovskiy.bybit_bot.dto.*;
@@ -26,6 +27,7 @@ import ru.ka_zhelandovskiy.bybit_bot.services.ParameterService;
 
 import java.util.*;
 
+@Slf4j
 @Service
 public class BybitServiceImpl implements BybitService {
     private final BybitApiClientFactory client;

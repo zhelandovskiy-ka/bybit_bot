@@ -1,6 +1,10 @@
 package ru.ka_zhelandovskiy.bybit_bot.strategies;
 
 import com.bybit.api.client.domain.trade.Side;
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Candlestick;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Instrument;
@@ -14,14 +18,25 @@ import java.util.List;
 
 
 @Slf4j
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+//@JsonTypeName("maxChangeNew")
 public class MaxChangeNewStrategy extends Strategy {
     private List<String> blackList;
     private Double maxChangeShift;
 
+    public MaxChangeNewStrategy(Strategy strategy) {
+        super(strategy);
+        this.blackList = (List<String>) strategy.getParameters().get("blackList");
+        this.maxChangeShift = ((Number) strategy.getParameters().get("maxChangeShift")).doubleValue();
+    }
+
     @Override
     public String toString() {
-        return STR."MaxChangeStrategy{getName()=\{getName()
+        return STR."MaxChangeNewStrategy{getName()=\{getName()
                 }, getInstrumentName()=\{getInstrumentName()
+                }, getType()=\{getType()
                 }, getChannelId()=\{getChannelId()
                 }, getSlPercent()=\{getSlPercent()
                 }, getTpPercent()=\{getTpPercent()
@@ -29,12 +44,6 @@ public class MaxChangeNewStrategy extends Strategy {
                 }, blackList()=\{this.blackList
                 }, maxChangeShift()=\{this.maxChangeShift
                 }}";
-    }
-
-    public MaxChangeNewStrategy(Strategy strategy) {
-        super(strategy);
-        this.blackList = (List<String>) strategy.getParameters().get("blackList");
-        this.maxChangeShift = ((Number) strategy.getParameters().get("maxChangeShift")).doubleValue();
     }
 
     @Override

@@ -25,4 +25,5 @@ public class StrategyModel {
     private double tpPercent;
     private double slPercent;
     private boolean active;
+    private boolean allowOrder;
 }
