@@ -30,21 +30,31 @@ public class ISServiceImpl implements ISService {
         this.strategyService = strategyService;
         this.strategyStorageService = strategyStorageService;
 
+        buildStrategyList();
+
+        log.info("STRATEGY LIST V1");
+        strategyList.forEach(System.out::println);
+
+        generateStrategyList();
+        log.info("STRATEGY LIST V2");
+
         if (!strategyStorageService.saveFileExist()) {
-            buildStrategyList();
-
-            log.info("SAVE FILE NOT FOUND");
-
-            log.info("STRATEGY LIST V1");
-            strategyList.forEach(System.out::println);
-
-            generateStrategyList();
-            log.info("STRATEGY LIST V2");
-        } else {
             log.info("SAVE FILE FOUND, LOAD DATA");
             List<Strategy> loaded = strategyStorageService.load();
-            setFinalStrategyList(loaded);
-        }
+
+            for (int i = 0; i < finalStrategyList.size(); i++) {
+                Strategy strategy = finalStrategyList.get(i);
+                for (int j = 0; j < loaded.size(); j++) {
+                    Strategy strategyLoaded = finalStrategyList.get(j);
+                    if (strategy.getInstrumentName().equals(strategyLoaded.getInstrumentName())
+                            && strategy.getName().equals(strategyLoaded.getName())) {
+                        finalStrategyList.set(i, strategyLoaded);
+                    }
+                }
+            }
+        } else
+            log.info("SAVE FILE NOT FOUND");
+
 
         log.info("STRATEGY LIST:");
         finalStrategyList.forEach(System.out::println);
