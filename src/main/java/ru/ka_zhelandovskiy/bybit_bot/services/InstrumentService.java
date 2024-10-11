@@ -18,6 +18,8 @@ public interface InstrumentService {
 
     String getQuantity(String symbol, SumType sumType);
 
+    String getQuantity(String symbol, SumType sumType, int leverage);
+
     double getSumWithLeverage(SumType sumType, String symbol);
 
     double getSumOfFee(String symbol);

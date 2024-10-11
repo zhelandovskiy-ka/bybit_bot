@@ -8,6 +8,8 @@ import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.services.*;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 
+import java.util.Map;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -85,22 +87,27 @@ public class ScannerServiceImpl implements ScannerService {
         log.info("FILE SAVED");
     }
 
-    private void checkForCloseOrder(Strategy str) {
+    private void checkForPlaceOrder(Strategy str, InstrumentService instrumentService) {
         if (!parameterService.isTestMode() && str.isAllowOrder()) {
-            log.info(STR."TRY CLOSE ORDER: \{str.getInstrumentName()} \{str.getSide()} \{str.getName()}");
+            Map<String, Integer> leverages = (Map<String, Integer>) str.getParameters().get("leverages");
+            String quantity;
+            int leverage = 0;
+            if (leverages != null) {
+                leverage = leverages.get(str.getInstrumentName());
+                quantity = instrumentService.getQuantity(str.getInstrumentName(), SumType.real_sum, leverage);
+            } else
+                quantity = instrumentService.getQuantity(str.getInstrumentName(), SumType.real_sum);
 
-            Side side = str.getSide() == Side.BUY ? Side.SELL : Side.BUY;
-
-            log.info(bybitService.closeOrder(str.getInstrumentName(), side));
+            log.info(STR."TRY OPEN ORDER: \{str.getInstrumentName()}(x\{leverage}) \{quantity} \{str.getSide()} \{str.getName()}");
+            log.info(bybitService.placeOrder(str.getInstrumentName(), quantity, str.getSide()));
         }
     }
 
-    private void checkForPlaceOrder(Strategy str, InstrumentService instrumentService) {
-
+    private void checkForCloseOrder(Strategy str) {
         if (!parameterService.isTestMode() && str.isAllowOrder()) {
-            String quantity = instrumentService.getQuantity(str.getInstrumentName(), SumType.real_sum);
-            log.info(STR."TRY OPEN ORDER: \{str.getInstrumentName()} \{quantity} \{str.getSide()} \{str.getName()}");
-            log.info(bybitService.placeOrder(str.getInstrumentName(), quantity, str.getSide()));
+            log.info(STR."TRY CLOSE ORDER: \{str.getInstrumentName()} \{str.getSide()} \{str.getName()}");
+            Side side = str.getSide() == Side.BUY ? Side.SELL : Side.BUY;
+            log.info(bybitService.closeOrder(str.getInstrumentName(), side));
         }
     }
 
