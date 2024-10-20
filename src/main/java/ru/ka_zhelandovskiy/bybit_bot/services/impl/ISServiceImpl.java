@@ -38,7 +38,7 @@ public class ISServiceImpl implements ISService {
         generateStrategyList();
         log.info("STRATEGY LIST V2");
 
-        if (!strategyStorageService.saveFileExist()) {
+        if (strategyStorageService.saveFileExist()) {
             log.info("SAVE FILE FOUND, LOAD DATA");
             List<Strategy> loaded = strategyStorageService.load();
 

@@ -13,6 +13,8 @@ import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
+import java.util.Map;
+
 @Data
 @Slf4j
 @AllArgsConstructor
@@ -25,11 +27,13 @@ public class MaxChangeStrategy extends Strategy {
     private double allPrices = 0;
     private double firstOpenPrice;
     private boolean wasOpen = false;
+    private Map<String, Double> maxChanges;
 
     public MaxChangeStrategy(Strategy strategy) {
         super(strategy);
         this.slShift = (Double) strategy.getParameters().get("slShift");
         this.miniSL = (Double) strategy.getParameters().get("miniSL");
+        this.maxChanges = (Map<String, Double>) strategy.getParameters().get("maxChanges");
     }
 
     @Override
@@ -43,6 +47,7 @@ public class MaxChangeStrategy extends Strategy {
                 }, getSlPercent()=\{getSlPercent()
                 }, getTpPercent()=\{getTpPercent()
                 }, isActive()=\{isActive()
+                }, maxChanges()=\{maxChanges
                 }}";
     }
 
@@ -57,7 +62,12 @@ public class MaxChangeStrategy extends Strategy {
         Candlestick cndst = instrument.getCandlestickList().getFirst();
 
         double priceChange = ss.getPriceChangePercent(cndst.getPriceOpen(), currentPrice);
-        double maxChange = instrument.getMaxChange();
+        double maxChange;
+
+        if (maxChanges != null) {
+            maxChange = maxChanges.get(getInstrumentName());
+        } else
+            maxChange = instrument.getMaxChange();
 
         boolean conditionToOpen = priceChange >= maxChange;
         log.info(STR."    current price: \{currentPrice}");
