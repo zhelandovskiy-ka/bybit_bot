@@ -1,7 +1,6 @@
 package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
@@ -79,6 +78,7 @@ public class ISServiceImpl implements ISService {
                 case StrategyName.maxChange -> finalStrategyList.add(new MaxChangeStrategy(strategy));
                 case StrategyName.maxChangeSimple -> finalStrategyList.add(new MaxChangeSimpleStrategy(strategy));
                 case StrategyName.maxChangeNew -> finalStrategyList.add(new MaxChangeNewStrategy(strategy));
+                case StrategyName.maxChangeTPSL -> finalStrategyList.add(new MaxChangeSLTPStrategy(strategy));
                 case StrategyName.scalpStrategy -> finalStrategyList.add(new ScalpMinMaxVolStrategy(strategy));
                 case StrategyName.smaStrategy -> finalStrategyList.add(new CrossSmaStrategy(strategy));
             }

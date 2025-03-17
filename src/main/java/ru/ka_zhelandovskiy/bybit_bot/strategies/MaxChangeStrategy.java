@@ -1,9 +1,7 @@
 package ru.ka_zhelandovskiy.bybit_bot.strategies;
 
 import com.bybit.api.client.domain.trade.Side;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Candlestick;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Instrument;
@@ -15,11 +13,11 @@ import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
 import java.util.Map;
 
-@Data
 @Slf4j
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-//@JsonTypeName("maxChange")
 public class MaxChangeStrategy extends Strategy {
     private double slShift;
     private double miniSL;
@@ -75,7 +73,6 @@ public class MaxChangeStrategy extends Strategy {
 
         if (wasOpen) {
             conditionToOpen = true;
-//            setPriceOpen(getAllPrices() / getAllQuantity());
             log.info(STR."        it wasOpen = true | setPriceOpen: \{getPriceOpen()}");
         }
 

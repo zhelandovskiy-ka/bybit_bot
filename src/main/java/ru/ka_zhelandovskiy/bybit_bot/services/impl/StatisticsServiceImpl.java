@@ -25,22 +25,44 @@ public class StatisticsServiceImpl implements StatisticsService {
 
     @Override
     public StatisticsModel addRecord(Strategy s) {
-        int result = s.getProfitSum() < 0 ? 0 : 1;
-
         StatisticsModel sm = new StatisticsModel();
+
         sm.setStrategy(s.getName());
         sm.setSide(s.getSide().getTransactionSide());
         sm.setInstrument(s.getInstrumentName());
         sm.setOpen(s.getPriceOpen());
-        sm.setClose(s.getPriceClose());
-        sm.setProfit(s.getProfitSumWoFee());
-        sm.setResult(result);
-        sm.setMaxProfit(s.getProfitMax());
-        sm.setMaxLose(s.getLoseMax());
 
-        log.info(STR."SAVE RECORD TO STATISTICS: \{sm.toString()}");
+        StatisticsModel statisticsModel = statisticsRepository.save(sm);
+        
+        log.info(STR."ADD NEW RECORD TO STATISTICS: \{statisticsModel.toString()}");
 
-        return statisticsRepository.save(sm);
+        return statisticsModel;
+    }
+
+    @Override
+    public StatisticsModel updateRecord(Strategy s) {
+        if (statisticsRepository.findById(s.getNumber()).isPresent()) {
+            int result = s.getProfitSum() < 0 ? 0 : 1;
+
+            StatisticsModel sm = new StatisticsModel();
+
+            sm.setNumber(s.getNumber());
+            sm.setClose(s.getPriceClose());
+            sm.setProfit(s.getProfitSumWoFee());
+            sm.setResult(result);
+            sm.setMaxProfit(s.getProfitMax());
+            sm.setMaxLose(s.getLoseMax());
+
+            StatisticsModel statisticsModel = statisticsRepository.save(sm);
+
+            log.info(STR."UPDATE RECORD STATISTICS: \{statisticsModel.toString()}");
+
+            return statisticsModel;
+        } else {
+            log.info(STR."RECORD \{s.getNumber()} NOT FOUND");
+        }
+
+        return null;
     }
 
     @Override
@@ -108,8 +130,8 @@ public class StatisticsServiceImpl implements StatisticsService {
 
         for (int i = 0; i < statisticsModelList.size(); i++) {
             StatisticsModel statisticsModel = statisticsModelList.get(i);
-            if (statisticsModel.getDate().isAfter(dateStart) && statisticsModel.getDate().isBefore(dateEnd)) {
-                dayMap.put(statisticsModel.getDate().getHour(), sumProfits.get(i));
+            if (statisticsModel.getDateOpen().isAfter(dateStart) && statisticsModel.getDateOpen().isBefore(dateEnd)) {
+                dayMap.put(statisticsModel.getDateOpen().getHour(), sumProfits.get(i));
             }
         }
 
@@ -137,7 +159,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         List<StatisticsModel> statisticsModelDayList = new ArrayList<>();
 
         statisticsModelList.forEach(statisticsModel -> {
-            if (statisticsModel.getDate().isAfter(dateStart) && statisticsModel.getDate().isBefore(dateEnd)) {
+            if (statisticsModel.getDateOpen().isAfter(dateStart) && statisticsModel.getDateOpen().isBefore(dateEnd)) {
                 statisticsModelDayList.add(statisticsModel);
             }
         });

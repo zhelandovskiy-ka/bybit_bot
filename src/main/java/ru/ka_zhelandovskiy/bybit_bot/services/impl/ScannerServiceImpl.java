@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
+import ru.ka_zhelandovskiy.bybit_bot.models.StatisticsModel;
 import ru.ka_zhelandovskiy.bybit_bot.services.*;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 
@@ -69,6 +70,11 @@ public class ScannerServiceImpl implements ScannerService {
                             log.info("---------------------------------------------------------------");
 
                             strategyService.send(str);
+
+                            StatisticsModel sm = statisticsService.addRecord(str);
+
+                            str.setNumber(sm.getNumber());
+                            strategyService.updateStrategy(str);
                         }
 
                         if (checkToClose) {
@@ -80,7 +86,7 @@ public class ScannerServiceImpl implements ScannerService {
                             strategyService.calcMaxProfitLosePercent(str);
                             strategyService.calcProfitSum(str);
                             resultService.incrementsResult(str.getName(), str.getProfitSumWoFee());
-                            statisticsService.addRecord(str);
+                            statisticsService.updateRecord(str);
                             strategyService.send(str);
                             strategyService.resetSLTPPercent(str);
                             strategyService.resetSide(str);

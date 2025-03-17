@@ -29,6 +29,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Strategy {
+    private Integer number;
     private String name;
     private String instrumentName;
     private String channelId;

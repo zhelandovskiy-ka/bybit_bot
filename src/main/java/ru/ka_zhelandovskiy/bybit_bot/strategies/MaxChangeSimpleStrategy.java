@@ -1,10 +1,10 @@
 package ru.ka_zhelandovskiy.bybit_bot.strategies;
 
 import com.bybit.api.client.domain.trade.Side;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Candlestick;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Instrument;
@@ -14,11 +14,11 @@ import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
-@Data
 @Slf4j
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-//@JsonTypeName("maxChangeSimple")
 public class MaxChangeSimpleStrategy extends Strategy {
     private double allQuantity = 0;
     private double allPrices = 0;

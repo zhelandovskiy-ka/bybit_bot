@@ -3,9 +3,9 @@ package ru.ka_zhelandovskiy.bybit_bot.models;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 
 @Entity
@@ -20,7 +20,9 @@ public class StatisticsModel {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int number;
     @CreationTimestamp
-    private LocalDateTime date;
+    private LocalDateTime dateOpen;
+    @UpdateTimestamp
+    private LocalDateTime dateClose;
     private String strategy;
     private String side;
     private String instrument;

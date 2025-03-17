@@ -13,6 +13,8 @@ public interface StatisticsService {
      */
     StatisticsModel addRecord(Strategy strategy);
 
+    StatisticsModel updateRecord(Strategy strategy);
+
     boolean deleteRecord(int id);
 
     /**

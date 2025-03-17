@@ -17,14 +17,18 @@ import java.util.List;
 @Slf4j
 @AllArgsConstructor
 @NoArgsConstructor
-public class MaxChangeNewStrategy extends Strategy {
+public class MaxChangeSLTPStrategy extends Strategy {
     private List<String> blackList;
-    private Double maxChangeShift;
+    private int maxCountOpen;
+    private double miniTp;
+    private int countOpen = 0; //сколько раз сработал стоп лосс/сколько раз добавлялась позиция
+    private boolean slChanged = false;
 
-    public MaxChangeNewStrategy(Strategy strategy) {
+    public MaxChangeSLTPStrategy(Strategy strategy) {
         super(strategy);
         this.blackList = (List<String>) strategy.getParameters().get("blackList");
-        this.maxChangeShift = ((Number) strategy.getParameters().get("maxChangeShift")).doubleValue();
+        this.maxCountOpen = (int) strategy.getParameters().get("maxCountOpen");
+        this.miniTp = (double) strategy.getParameters().get("miniTp");
     }
 
     @Override
@@ -37,7 +41,8 @@ public class MaxChangeNewStrategy extends Strategy {
                 }, getTpPercent()=\{getTpPercent()
                 }, isActive()=\{isActive()
                 }, blackList()=\{this.blackList
-                }, maxChangeShift()=\{this.maxChangeShift
+                }, maxCountSL()=\{this.maxCountOpen
+                }, miniTp()=\{this.miniTp
                 }}";
     }
 
@@ -45,28 +50,29 @@ public class MaxChangeNewStrategy extends Strategy {
     public boolean checkToOpen(ISService isService) {
         InstrumentService is = isService.getInstrumentService();
         StrategyService ss = isService.getStrategyService();
-
         Instrument instrument = is.getInstrumentByName(getInstrumentName());
 
         if (inBlackList(instrument.getSymbol()))
             return false;
 
-        double currentPrice = instrument.getCurrentPrice();
-
         Candlestick cndst = instrument.getCandlestickList().getFirst();
-
+        double currentPrice = instrument.getCurrentPrice();
         double priceChange = ss.getPriceChangePercent(cndst.getPriceOpen(), currentPrice);
-        double maxChange = instrument.getMaxChange() + (instrument.getMaxChange() * maxChangeShift);
+        double maxChange = instrument.getMaxChange();
 
         boolean conditionToOpen = priceChange >= maxChange;
         log.info(STR."    current price: \{currentPrice}");
         log.info(STR."    \{instrument.getSymbol()} | \{getName()} checkToOpen priceChange >= getMaxChange \{Utilities.roundDouble(priceChange)} >= \{maxChange}?");
 
-
         if (conditionToOpen) {
             log.info(STR."    \{getInstrumentName()} conditionToOpen is \{conditionToOpen}");
 
-            setPriceOpen(instrument.getCurrentPrice());
+            if (getPriceOpen() == 0.0)
+                setPriceOpen(instrument.getCurrentPrice());
+            else
+                setPriceOpen((instrument.getCurrentPrice() + getPriceOpen() / 2));
+
+            this.countOpen += 1;
 
             if (getSide() == null) {
                 if (currentPrice < cndst.getPriceOpen())
@@ -87,8 +93,20 @@ public class MaxChangeNewStrategy extends Strategy {
 
         log.info(STR."    check SL: \{profitPercent} <= \{getSlPercent()}");
 
+        if (profitPercent >= getTpPercent() * miniTp) {
+            setSlPercent(0.001);
+            slChanged = true;
+        }
+
         if (profitPercent <= getSlPercent()) {
-            return true;
+            if (slChanged)
+                return true;
+
+            if (this.countOpen == maxCountOpen)
+                return true;
+            else {
+                setOpen(false);
+            }
         }
 
         log.info(STR."    check TP: \{profitPercent} >= \{getTpPercent()}");
@@ -117,7 +135,7 @@ public class MaxChangeNewStrategy extends Strategy {
 
         #\{getInstrumentName()} PO: \{getPriceOpen()}
 
-        Ставка: \{sumWithLeverage} Вся ставка: \{getAllBetSum()}
+        Ставка: \{sumWithLeverage} Вся ставка: \{getAllBetSum()} №\{countOpen}
 
         \{direction} \{Utilities.roundDouble(getPreviousPriceOpen())} -> \{Utilities.roundDouble(currentPrice)} (\{Utilities.roundDouble(profit)}%) | \{instrument.getMaxChange()}
 

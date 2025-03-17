@@ -1,9 +1,7 @@
 package ru.ka_zhelandovskiy.bybit_bot.strategies;
 
 import com.bybit.api.client.domain.trade.Side;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Instrument;
@@ -11,11 +9,9 @@ import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
 import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 
-@Data
 @Slf4j
 @AllArgsConstructor
 @NoArgsConstructor
-//@JsonTypeName("smaStrategy")
 public class CrossSmaStrategy extends Strategy {
     private int minSma;
     private int maxSma;
