@@ -3,12 +3,15 @@ package ru.ka_zhelandovskiy.bybit_bot.models;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
+
 
 @Getter
-@Entity
+@Setter
 @ToString
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
 @Table(name = "parameters")
 public class ParametersModel {
     @Id

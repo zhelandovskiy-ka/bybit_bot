@@ -128,8 +128,8 @@ public class ChartForm {
         plot.setRangeAxis(yAxis);
 
         //вычисление небольшого отступа от верха и от низа графика
-        double min = instrument.getMinPrice();
-        double max = instrument.getMaxPrice();
+        double min = instrument.getMinPriceClose();
+        double max = instrument.getMaxPriceClose();
 
         double rangeOut;
         if (min == max)

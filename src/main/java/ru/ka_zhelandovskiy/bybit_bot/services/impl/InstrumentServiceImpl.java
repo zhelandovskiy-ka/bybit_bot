@@ -1,5 +1,6 @@
 package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 
+import com.bybit.api.client.domain.market.MarketInterval;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -62,24 +63,36 @@ public class InstrumentServiceImpl implements InstrumentService {
     }
 
     @Override
-    public void refreshCandlesticks() {
+    public void refreshCandlesticks(int limit) {
         log.info("start refreshCandlesticks");
 
-        instrumentList.forEach(i -> i.setCandlestickList(bybitService.getCandleStickHistory(i.getSymbol(), 60)));
+        instrumentList.forEach(i -> i.setCandlestickList(bybitService.getCandleStickHistory(i.getSymbol(), limit, null)));
 
         log.info("end refreshCandlesticks");
     }
 
     @Override
-    public String getQuantity(String symbol) {
+    public String getQuantity(String symbol, SumType sumType) {
         Instrument instrument = getInstrumentByName(symbol);
 
         int quantityPrecision = instrument.getQp();
         double price = instrument.getCurrentPrice();
-        double sum = getSumWithLeverage(SumType.real_sum, symbol) / price;
+        double sum = getSumWithLeverage(sumType, symbol) / price;
 
         return String.valueOf(Utilities.roundDouble(sum, quantityPrecision));
     }
+
+    @Override
+    public String getQuantity(String symbol, SumType sumType, int leverage) {
+        Instrument instrument = getInstrumentByName(symbol);
+
+        int quantityPrecision = instrument.getQp();
+        double price = instrument.getCurrentPrice();
+        double sum = parameterService.getSumByType(sumType) * leverage / price;
+
+        return String.valueOf(Utilities.roundDouble(sum, quantityPrecision));
+    }
+
     @Override
     public double getSumWithLeverage(SumType sumType, String symbol) {
         int leverage = getInstrumentByName(symbol).getLeverage();

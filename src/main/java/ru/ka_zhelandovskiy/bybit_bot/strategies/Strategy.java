@@ -2,6 +2,9 @@
 package ru.ka_zhelandovskiy.bybit_bot.strategies;
 
 import com.bybit.api.client.domain.trade.Side;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
@@ -11,13 +14,26 @@ import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
 import java.util.Map;
 
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        property = "className"
+)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = MaxChangeStrategy.class, name = "maxChange"),
+        @JsonSubTypes.Type(value = MaxChangeSimpleStrategy.class, name = "maxChangeSimple"),
+        @JsonSubTypes.Type(value = MaxChangeNewStrategy.class, name = "maxChangeNew"),
+        @JsonSubTypes.Type(value = ScalpMinMaxVolStrategy.class, name = "scalpStrategy"),
+        @JsonSubTypes.Type(value = CrossSmaStrategy.class, name = "smaStrategy")
+})
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class Strategy {
     private String name;
     private String instrumentName;
     private String channelId;
     private String type;
+    private int timeFrame;
     private double priceOpen;
     private double previousPriceOpen;
     private double priceClose;
@@ -31,13 +47,9 @@ public class Strategy {
     private double allBetSum = 0;
     private boolean open;
     private boolean active;
+    private boolean allowOrder;
     private Side side;
     private Map<String, Object> parameters;
-
-    public Strategy(String name, String channelId) {
-        this.name = name;
-        this.channelId = channelId;
-    }
 
     public Strategy(Strategy strategy) {
         this.name = strategy.getName();
@@ -48,6 +60,7 @@ public class Strategy {
         this.slPercent = strategy.getSlPercent();
         this.tpPercent = strategy.getTpPercent();
         this.active = strategy.isActive();
+        this.allowOrder = strategy.isAllowOrder();
     }
 
     @Override
@@ -61,6 +74,7 @@ public class Strategy {
                         }, getTpPercent()=\{getTpPercent()
                         }, getSlPercent()=\{getSlPercent()
                         }, isActive()=\{isActive()
+                        }, isAllowOrder()=\{isAllowOrder()
                         }}";
     }
 
@@ -76,7 +90,7 @@ public class Strategy {
         String isOpenClose = isOpen() ? "#open" : "#close";
 
         return STR."""
-        #\{getName()} #\{getSide()} #\{isOpenClose}
+        #\{getName()} #\{getSide()} \{isOpenClose}
 
         #\{getInstrumentName()} PO: \{getPriceOpen()} \{result}
 

@@ -1,6 +1,7 @@
 package ru.ka_zhelandovskiy.bybit_bot.strategies;
 
 import com.bybit.api.client.domain.trade.Side;
+import com.fasterxml.jackson.annotation.JsonTypeName;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,41 +14,40 @@ import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
-import java.util.Map;
-
 @Data
 @Slf4j
 @AllArgsConstructor
 @NoArgsConstructor
-//@JsonTypeName("maxChange")
-public class MaxChangeStrategy extends Strategy {
-    private double slShift;
-    private double miniSL;
+//@JsonTypeName("maxChangeSimple")
+public class MaxChangeSimpleStrategy extends Strategy {
     private double allQuantity = 0;
     private double allPrices = 0;
+    private double shift;
+    private double slShift;
+    private double miniSL;
     private double firstOpenPrice;
     private boolean wasOpen = false;
-    private Map<String, Double> maxChanges;
 
-    public MaxChangeStrategy(Strategy strategy) {
+    public MaxChangeSimpleStrategy(Strategy strategy) {
         super(strategy);
         this.slShift = (Double) strategy.getParameters().get("slShift");
         this.miniSL = (Double) strategy.getParameters().get("miniSL");
-        this.maxChanges = (Map<String, Double>) strategy.getParameters().get("maxChanges");
+        this.shift = (Double) strategy.getParameters().get("shift");
+        setType(strategy.getType());
     }
 
     @Override
     public String toString() {
-        return STR."MaxChangeStrategy{getName()=\{getName()
+        return STR."MaxChangeSimpleStrategy{getName()=\{getName()
                 }, getInstrumentName()=\{getInstrumentName()
                 }, getType()=\{getType()
                 }, getChannelId()=\{getChannelId()
-                }, slShift=\{slShift
-                }, miniSL=\{miniSL
+                }, slShift=\{getShift()
+                }, slShift=\{getSlShift()
+                }, miniSL=\{getMiniSL()
                 }, getSlPercent()=\{getSlPercent()
                 }, getTpPercent()=\{getTpPercent()
                 }, isActive()=\{isActive()
-                }, maxChanges()=\{maxChanges
                 }}";
     }
 
@@ -62,12 +62,8 @@ public class MaxChangeStrategy extends Strategy {
         Candlestick cndst = instrument.getCandlestickList().getFirst();
 
         double priceChange = ss.getPriceChangePercent(cndst.getPriceOpen(), currentPrice);
-        double maxChange;
-
-        if (maxChanges != null) {
-            maxChange = maxChanges.get(getInstrumentName());
-        } else
-            maxChange = instrument.getMaxChange();
+        double maxChangeShift = instrument.getMaxChange() * shift;
+        double maxChange = instrument.getMaxChange() + maxChangeShift;
 
         boolean conditionToOpen = priceChange >= maxChange;
         log.info(STR."    current price: \{currentPrice}");
@@ -86,13 +82,12 @@ public class MaxChangeStrategy extends Strategy {
 
             log.info(STR."    \{getInstrumentName()} conditionToOpen is \{conditionToOpen}");
             log.info(STR."    \{getInstrumentName()} \{getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()} (getAllPrices(), getAllQuantity(), getAllBetSum())");
-            log.info(STR."    \{getAllPrices()} + \{currentPrice} * \{quantity} (getAllPrices() + currentPrice * quantity");
 
             setAllPrices(getAllPrices() + (currentPrice * quantity));
             setAllQuantity(getAllQuantity() + quantity);
             setAllBetSum(getAllBetSum() + is.getSumWithLeverage(SumType.sum, getInstrumentName()));
             setPreviousPriceOpen(getPriceOpen());
-            setPriceOpen(currentPrice);
+            setPriceOpen(instrument.getCurrentPrice());
 
             if (getFirstOpenPrice() == 0) {
                 setFirstOpenPrice(currentPrice);
@@ -144,11 +139,11 @@ public class MaxChangeStrategy extends Strategy {
             log.info(STR."        TRUE | \{getInstrumentName()} setOpen(false) wasOpen(true)");
         }
 
-        log.info(STR."     \{getInstrumentName()} \{profitPercent} >= \{getTpPercent()} && \{profitPercent} > \{getSlPercent() + slShift}?");
+        log.info(STR."     \{getInstrumentName()} \{priceChangePercentStart} >= \{getTpPercent()} && \{priceChangePercentStart} > \{getSlPercent() + slShift}?");
 
-        if (profitPercent >= getTpPercent() && profitPercent > getSlPercent() + slShift) {
-            setSlPercent(profitPercent - slShift);
-            log.info(STR."        TRUE | SET NEW SL PERCENT: \{profitPercent} - \{slShift} = \{getSlPercent()}");
+        if (priceChangePercentStart >= getTpPercent() && priceChangePercentStart > getSlPercent() + slShift) {
+            setSlPercent(priceChangePercentStart - slShift);
+            log.info(STR."        TRUE | SET NEW SL PERCENT: \{priceChangePercentStart} - \{slShift} = \{getSlPercent()}");
         }
 
         return false;
@@ -156,35 +151,20 @@ public class MaxChangeStrategy extends Strategy {
 
     @Override
     public String getMessageForSendOpenPosition(double sumWithLeverage, double percent, double sum, double percentOfSum, InstrumentService is, StrategyService ss) {
-        String isOpenClose = isOpen() ? "#open" : "#close";
-
-        Instrument instrument = is.getInstrumentByName(getInstrumentName());
-        Candlestick cndst = instrument.getCandlestickList().getFirst();
-
         double pavg = Utilities.roundDouble(getAllPrices() / getAllQuantity());
-        double cndstPriceOpen = cndst.getPriceOpen();
-        double currentPrice = instrument.getCurrentPrice();
-        double profit = ss.getPriceChangePercent(cndstPriceOpen, currentPrice);
-
-        String direction = currentPrice > cndstPriceOpen ? "⬆ " : "⬇ ";
 
         return STR."""
-        #\{getName()} #\{getSide()} \{isOpenClose}
-
+        #\{getName()} #\{getSide()} #open
         #\{getInstrumentName()} PO: \{getPriceOpen()} PAVG: \{ pavg }
-
-        Ставка: \{sumWithLeverage} Вся ставка: \{getAllBetSum()}
-
-        AllPrices: \{Utilities.roundDouble(getAllPrices())} AllQuantity: \{getAllQuantity()}
-
-        \{direction} \{Utilities.roundDouble(getPreviousPriceOpen())} -> \{Utilities.roundDouble(currentPrice)} (\{Utilities.roundDouble(profit)}%) | \{instrument.getMaxChange()}
-
         \{getInstrumentName()}: \{percent}% | \{sum}$ | \{percentOfSum}%""";
     }
 
     @Override
     public String getMessageForSendClosePosition(String result, double sumWithLeverage, double percent, double sum, double percentOfSum) {
-        return super.getMessageForSendClosePosition(result, getAllBetSum(), percent, sum, percentOfSum);
+        return STR."""
+        #\{getName()} #\{getSide()} #close
+        #\{getInstrumentName()} PO: \{getPriceOpen()} \{result}
+        \{percent}% | \{sum}$ | \{percentOfSum}%""";
     }
 
     public double getAllQuantity() {

@@ -14,9 +14,11 @@ public interface InstrumentService {
 
     List<Instrument> getInstrumentList();
 
-    void refreshCandlesticks();
+    void refreshCandlesticks(int limit);
 
-    String getQuantity(String symbol);
+    String getQuantity(String symbol, SumType sumType);
+
+    String getQuantity(String symbol, SumType sumType, int leverage);
 
     double getSumWithLeverage(SumType sumType, String symbol);
 

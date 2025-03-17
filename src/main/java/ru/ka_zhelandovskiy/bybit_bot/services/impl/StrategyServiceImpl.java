@@ -4,14 +4,19 @@ import com.bybit.api.client.domain.trade.Side;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.ka_zhelandovskiy.bybit_bot.dto.ResultSumDto;
+import ru.ka_zhelandovskiy.bybit_bot.dto.StrategyInfoDto;
 import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
+import ru.ka_zhelandovskiy.bybit_bot.mapper.ResultMapper;
 import ru.ka_zhelandovskiy.bybit_bot.mapper.StrategyMapper;
+import ru.ka_zhelandovskiy.bybit_bot.models.ResultsModel;
 import ru.ka_zhelandovskiy.bybit_bot.models.StrategyModel;
 import ru.ka_zhelandovskiy.bybit_bot.repository.StrategyRepository;
 import ru.ka_zhelandovskiy.bybit_bot.services.*;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,11 +30,12 @@ public class StrategyServiceImpl implements StrategyService {
     private final InstrumentService instrumentService;
     private final ResultService resultService;
     private final StatisticsService statisticsService;
+    private final ResultMapper resultMapper;
 
     @Getter
     private List<Strategy> strategyList;
 
-    public StrategyServiceImpl(StrategyRepository strategyRepository, StrategyMapper strategyMapper, ParameterService parameterService, SenderService senderService, InstrumentService instrumentService, ResultService resultService, StatisticsService statisticsService) {
+    public StrategyServiceImpl(StrategyRepository strategyRepository, StrategyMapper strategyMapper, ParameterService parameterService, SenderService senderService, InstrumentService instrumentService, ResultService resultService, StatisticsService statisticsService, ResultMapper resultMapper) {
         this.strategyRepository = strategyRepository;
         this.strategyMapper = strategyMapper;
         this.parameterService = parameterService;
@@ -37,6 +43,7 @@ public class StrategyServiceImpl implements StrategyService {
         this.instrumentService = instrumentService;
         this.resultService = resultService;
         this.statisticsService = statisticsService;
+        this.resultMapper = resultMapper;
         this.strategyList = initStrategyList();
 
         System.out.println("STRATEGY LIST:");
@@ -48,9 +55,13 @@ public class StrategyServiceImpl implements StrategyService {
         int timeFrame = parameterService.getTimeFrame();
 
         System.out.println("STRATEGY MODEL LIST:");
-        getAllStrategiesByTimeFrame(timeFrame).forEach(System.out::println);
+        List<StrategyModel> allStrategiesByTimeFrame = getActiveStrategiesByTimeFrame(timeFrame);
+        allStrategiesByTimeFrame.forEach(strategyModel -> {
+            resultService.getOrInsert(strategyModel.getName());
+            System.out.println(strategyModel);
+        });
 
-        return getAllStrategiesByTimeFrame(timeFrame)
+        return allStrategiesByTimeFrame
                 .stream()
                 .map(strategyMapper::mapModelToStrategy)
                 .collect(Collectors.toList());
@@ -59,6 +70,11 @@ public class StrategyServiceImpl implements StrategyService {
     @Override
     public List<StrategyModel> getAllStrategiesByTimeFrame(int timeFrame) {
         return strategyRepository.findAllByTimeFrame(timeFrame);
+    }
+
+    @Override
+    public List<StrategyModel> getActiveStrategiesByTimeFrame(int timeFrame) {
+        return strategyRepository.findAllByTimeFrameAndActiveTrue(timeFrame);
     }
 
     @Override
@@ -71,6 +87,11 @@ public class StrategyServiceImpl implements StrategyService {
     }
 
     @Override
+    public StrategyModel getStrategyModelByName(String name) {
+        return strategyRepository.findByName(name);
+    }
+
+    @Override
     public void updateStrategy(Strategy strategy) {
         for (int i = 0; i < strategyList.size(); i++) {
             if (getStrategyList().get(i).getName().equals(strategy.getName()))
@@ -79,57 +100,117 @@ public class StrategyServiceImpl implements StrategyService {
     }
 
     @Override
-    public void send(Strategy str) {
-        senderService.send("", str.getChannelId(), generateMessage(str));
+    public List<String> getStrategiesNameAll() {
+        return strategyRepository.findAll().stream()
+                .map(StrategyModel::getName)
+                .sorted()
+                .toList();
     }
 
-    private String generateMessage(Strategy str) {
+    @Override
+    public List<String> getStrategiesNameActive() {
+        return strategyRepository.findByActiveTrue().stream()
+                .map(StrategyModel::getName)
+                .sorted()
+                .toList();
+    }
+
+    @Override
+    public List<ResultSumDto> getStrategiesBankSum() {
+        List<ResultsModel> results = resultService.getAllResult();
+
+        List<ResultsModel> filteredResults = new ArrayList<>();
+
+        getStrategiesNameActive().forEach(name -> {
+            results.forEach(result -> {
+                if (result.getName().equals(name))
+                    filteredResults.add(result);
+            });
+        });
+
+        return filteredResults.stream()
+                .map(resultMapper::toResulSumDto)
+                .toList();
+    }
+
+    @Override
+    public List<StrategyInfoDto> getStrategiesInfo() {
+        List<ResultsModel> results = resultService.getAllResult();
+
+        List<ResultsModel> filteredResults = new ArrayList<>();
+
+        getStrategiesNameActive().forEach(name -> {
+            results.forEach(result -> {
+                if (result.getName().equals(name))
+                    filteredResults.add(result);
+            });
+        });
+
+        List<StrategyInfoDto> list = filteredResults.stream()
+                .map(resultMapper::toStrategyInfoDto)
+                .toList();
+
+        list.forEach(strategyInfoDto -> {
+            Strategy strategy = getStrategyByName(strategyInfoDto.getName());
+            strategyInfoDto.setTpPercent(strategy.getTpPercent());
+            strategyInfoDto.setSlPercent(strategy.getSlPercent());
+        });
+
+        return list;
+    }
+
+    @Override
+    public void send(Strategy strategy) {
+        senderService.send("", strategy.getChannelId(), generateMessage(strategy));
+    }
+
+    private String generateMessage(Strategy strategy) {
         String result = "";
 
-        if (!str.isOpen() && str.getProfitSum() != 0)
-            result = generateResultMessage(str);
+        log.info(STR."generate message for send: strategy.isOpen():\{strategy.isOpen()} strategy.getProfitSum():\{strategy.getProfitSum()}");
 
-        String instrumentName = str.getInstrumentName();
+        if (!strategy.isOpen() && strategy.getProfitSum() != 0)
+            result = generateResultMessage(strategy);
 
-        double bank = resultService.getBank(str.getName());
-        double sum = statisticsService.getProfitByInstrumentAndStrategy(instrumentName, str.getName());
-        double percent = statisticsService.getPercentByInstrumentAndStrategy(instrumentName, str.getName());
+        String instrumentName = strategy.getInstrumentName();
+
+        double bank = resultService.getBank(strategy.getName());
+        double sum = statisticsService.getProfitByInstrumentAndStrategy(instrumentName, strategy.getName());
+        double percent = statisticsService.getPercentByInstrumentAndStrategy(instrumentName, strategy.getName());
 
         double percentOfSum = Utilities.roundDouble(sum / bank * 100);
 
         double sumWithLeverage = instrumentService.getSumWithLeverage(SumType.sum, instrumentName);
 
-        if (!str.isOpen())
-            return str.getMessageForSendClosePosition(result, sumWithLeverage, percent, sum, percentOfSum);
+        if (!strategy.isOpen())
+            return strategy.getMessageForSendClosePosition(result, sumWithLeverage, percent, sum, percentOfSum);
 
-        return str.getMessageForSendOpenPosition(sumWithLeverage, percent, sum, percentOfSum, instrumentService, this);
+        return strategy.getMessageForSendOpenPosition(sumWithLeverage, percent, sum, percentOfSum, instrumentService, this);
     }
 
-    private String generateResultMessage(Strategy str) {
+    private String generateResultMessage(Strategy strategy) {
         String result = "";
 
-        double profitWOFee = getProfitWOFee(str);
-        double percentByProfit = getPercentByProfit(str);
-        double profitReal = getProfitReal(str);
-        double profitRealPercent = getProfitRealPercent(str);
+        double profitWOFee = strategy.getProfitSumWoFee();
+        double percentByProfit = getPercentByProfit(strategy);
+        double profitReal = getProfitReal(strategy);
+        double profitRealPercent = getProfitRealPercent(strategy);
 
-        resultService.incrementsResult(str.getName(), profitWOFee);
-
-        double bank = resultService.getBank(str.getName());
-        double dayProfit = resultService.getDayMoney(str.getName());
+        double bank = resultService.getBank(strategy.getName());
+        double dayProfit = resultService.getDayMoney(strategy.getName());
 
         if (profitWOFee > 0)
-            result = STR."PC: \{str.getPriceClose()}\n\n✅ \{profitWOFee} \{percentByProfit}% (\{profitReal} \{profitRealPercent}%)\n";
+            result = STR."PC: \{strategy.getPriceClose()}\n\n✅ \{profitWOFee} \{percentByProfit}% (\{profitReal} \{profitRealPercent}%)\n";
         if (profitWOFee < 0)
-            result = STR."PC: \{str.getPriceClose()}\n\n❌ \{profitWOFee} \{percentByProfit}% (\{profitReal} \{profitRealPercent}%)\n";
+            result = STR."PC: \{strategy.getPriceClose()}\n\n❌ \{profitWOFee} \{percentByProfit}% (\{profitReal} \{profitRealPercent}%)\n";
         if (profitWOFee == 0)
-            result = STR."PC: \{str.getPriceClose()}♻\n";
+            result = STR."PC: \{strategy.getPriceClose()}♻\n";
 
-        int leverage = instrumentService.getLeverageBySymbol(str.getInstrumentName());
+        int leverage = instrumentService.getLeverageBySymbol(strategy.getInstrumentName());
 
         result = result
-                + getStatString("-", str.getLoseMax(), leverage)
-                + getStatString("+", str.getProfitMax(), leverage)
+                + getStatString("-", strategy.getLoseMax(), leverage)
+                + getStatString("+", strategy.getProfitMax(), leverage)
                 + STR."\n\nБанк: \{bank}$ (\{dayProfit}$)";
 
         return result;
@@ -140,39 +221,39 @@ public class StrategyServiceImpl implements StrategyService {
     }
 
     @Override
-    public double getProfitPercent(Strategy s) {
-        s.setProfitPercent(0);
+    public double getProfitPercent(Strategy strategy) {
+        strategy.setProfitPercent(0);
 
-        double currentPrice = instrumentService.getCurrentPrice(s.getInstrumentName());
+        double currentPrice = instrumentService.getCurrentPrice(strategy.getInstrumentName());
         double priceChange = 0;
 
-        if (s.getSide() == Side.BUY)
-            priceChange = currentPrice - s.getPriceOpen();
+        if (strategy.getSide() == Side.BUY)
+            priceChange = currentPrice - strategy.getPriceOpen();
 
-        if (s.getSide() == Side.SELL)
-            priceChange = s.getPriceOpen() - currentPrice;
+        if (strategy.getSide() == Side.SELL)
+            priceChange = strategy.getPriceOpen() - currentPrice;
 
-        s.setProfitPercent(priceChange / s.getPriceOpen() * 100);
+        strategy.setProfitPercent(priceChange / strategy.getPriceOpen() * 100);
 
-        log.info(STR."     getProfitPercent 1 | getSide: \{s.getSide()} currentPrice: \{currentPrice} getPriceOpen: \{s.getPriceOpen()} ProfitPercent: \{priceChange} / \{s.getPriceOpen()} * 100 = \{s.getProfitPercent()}");
+        log.info(STR."     getProfitPercent 1 | getSide: \{strategy.getSide()} currentPrice: \{currentPrice} getPriceOpen: \{strategy.getPriceOpen()} ProfitPercent: \{priceChange} / \{strategy.getPriceOpen()} * 100 = \{strategy.getProfitPercent()}");
 
-        return s.getProfitPercent();
+        return strategy.getProfitPercent();
     }
 
     @Override
-    public double getProfitPercent(Strategy s, double priceOpen) {
-        double currentPrice = instrumentService.getCurrentPrice(s.getInstrumentName());
+    public double getProfitPercent(Strategy strategy, double priceOpen) {
+        double currentPrice = instrumentService.getCurrentPrice(strategy.getInstrumentName());
         double priceChange = 0;
 
-        if (s.getSide() == Side.BUY)
+        if (strategy.getSide() == Side.BUY)
             priceChange = currentPrice - priceOpen;
 
-        if (s.getSide() == Side.SELL)
+        if (strategy.getSide() == Side.SELL)
             priceChange = priceOpen - currentPrice;
 
-        double profitPercent = priceChange / s.getPriceOpen() * 100;
+        double profitPercent = priceChange / strategy.getPriceOpen() * 100;
 
-        log.info(STR."     getProfitPercent 2 | getSide: \{s.getSide()} currentPrice: \{currentPrice} firstOpenPrice: \{priceOpen} ProfitPercent: \{priceChange} / \{s.getPriceOpen()} * 100 = \{profitPercent}");
+        log.info(STR."     getProfitPercent 2 | getSide: \{strategy.getSide()} currentPrice: \{currentPrice} firstOpenPrice: \{priceOpen} ProfitPercent: \{priceChange} / \{strategy.getPriceOpen()} * 100 = \{profitPercent}");
 
         return profitPercent;
     }
@@ -186,69 +267,66 @@ public class StrategyServiceImpl implements StrategyService {
     }
 
     @Override
-    public void calcProfitSum(Strategy s) {
-        double sum = s.getAllBetSum();
-        if (s.getSide() == Side.BUY)
-            s.setProfitSum((s.getPriceClose() - s.getPriceOpen()) * (sum / s.getPriceOpen()));
-        if (s.getSide() == Side.SELL)
-            s.setProfitSum((s.getPriceOpen() - s.getPriceClose()) * (sum / s.getPriceOpen()));
-        s.setAllBetSum(0);
+    public void calcProfitSum(Strategy strategy) {
+        double sum = strategy.getAllBetSum();
+        if (sum == 0)
+            sum = instrumentService.getSumWithLeverage(SumType.sum, strategy.getInstrumentName());
+
+        if (strategy.getSide() == Side.BUY) {
+            strategy.setProfitSum((strategy.getPriceClose() - strategy.getPriceOpen()) * (sum / strategy.getPriceOpen()));
+            log.info(STR."calc profit BUY: (strategy.getPriceClose():\{strategy.getPriceClose()} - strategy.getPriceOpen():\{strategy.getPriceOpen()}) * sum:\{sum} / strategy.getPriceOpen():\{strategy.getPriceOpen()}");
+        }
+        if (strategy.getSide() == Side.SELL) {
+            strategy.setProfitSum((strategy.getPriceOpen() - strategy.getPriceClose()) * (sum / strategy.getPriceOpen()));
+            log.info(STR."calc profit SELL: (strategy.getPriceOpen():\{strategy.getPriceOpen()} - strategy.getPriceClose():\{strategy.getPriceClose()}) * sum:\{sum} / strategy.getPriceOpen():\{strategy.getPriceOpen()}");
+        }
+        strategy.setAllBetSum(0);
+
+        double fee = instrumentService.getSumOfFee(strategy.getInstrumentName());
+        log.info(STR."setProfitWOFee: \{strategy.getProfitSum()} - \{fee}");
+        double profitWoFee = Utilities.roundDouble(strategy.getProfitSum() - fee);
+        strategy.setProfitSumWoFee(profitWoFee);
     }
 
     @Override
-    public void calcMaxProfitLosePercent(Strategy str) {
-        double profit = getProfitPercent(str);
+    public void calcMaxProfitLosePercent(Strategy strategy) {
+        double profit = getProfitPercent(strategy);
 
         if (profit > 0) {
-            str.setProfitMax(Math.max(profit, str.getProfitMax()));
+            strategy.setProfitMax(Math.max(profit, strategy.getProfitMax()));
         }
         if (profit < 0) {
-            str.setLoseMax(Math.min(profit, str.getLoseMax()));
+            strategy.setLoseMax(Math.min(profit, strategy.getLoseMax()));
         }
     }
 
     @Override
-    public void resetSLTPPercent(Strategy str) {
-        str.setSlPercent(strategyRepository.findByName(str.getName()).getSlPercent());
-        str.setTpPercent(strategyRepository.findByName(str.getName()).getTpPercent());
+    public void resetSLTPPercent(Strategy strategy) {
+        strategy.setSlPercent(strategyRepository.findByName(strategy.getName()).getSlPercent());
+        strategy.setTpPercent(strategyRepository.findByName(strategy.getName()).getTpPercent());
     }
 
     @Override
-    public void resetSide(Strategy str) {
-        str.setSide(null);
+    public void resetSide(Strategy strategy) {
+        strategy.setSide(null);
     }
 
-    //    @Override
-    private double getProfitPercentWithLeverageWoFee(Strategy s, double leverage) {
+    private double getProfitPercentWithLeverageWoFee(Strategy strategy, double leverage) {
         double fee = parameterService.getFee();
 
-        return s.getProfitPercent() * leverage - (fee * 2 * 100);
+        return strategy.getProfitPercent() * leverage - (fee * 2 * 100);
     }
 
-    //    @Override
-    private double getProfitWOFee(Strategy strategy) {
-        log.info(STR."getProfitWOFee: \{strategy.getProfitSum()} - \{instrumentService.getSumOfFee(strategy.getInstrumentName())}");
-
-        double profitWoFee = Utilities.roundDouble(strategy.getProfitSum() - instrumentService.getSumOfFee(strategy.getInstrumentName()), 2);
-
-        strategy.setProfitSumWoFee(profitWoFee);
-
-        return strategy.getProfitSumWoFee();
-    }
-
-    //    @Override
     private double getPercentByProfit(Strategy strategy) {
-        log.info(STR."getPercentByProfit: \{getProfitWOFee(strategy)} / \{parameterService.getSum() * 100}");
+        log.info(STR."getPercentByProfit: \{strategy.getProfitSumWoFee()} / \{parameterService.getSum() * 100}");
 
-        return Utilities.roundDouble(getProfitWOFee(strategy) / parameterService.getSum() * 100);
+        return Utilities.roundDouble(strategy.getProfitSumWoFee() / parameterService.getSum() * 100);
     }
 
-    //    @Override
     private double getProfitReal(Strategy strategy) {
-        return Utilities.roundDouble((getProfitWOFee(strategy) / (parameterService.getSum() / parameterService.getRealSum())));
+        return Utilities.roundDouble((strategy.getProfitSumWoFee() / (parameterService.getSum() / parameterService.getRealSum())));
     }
 
-    //    @Override
     private double getProfitRealPercent(Strategy strategy) {
         return Utilities.roundDouble(getProfitReal(strategy) / parameterService.getRealSum() * 100);
     }

@@ -3,12 +3,15 @@ package ru.ka_zhelandovskiy.bybit_bot.models;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Data;
-import lombok.ToString;
+import lombok.*;
 
-@Data
-@Entity
+
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @ToString
+@Entity
 @Table(name = "results")
 public class ResultsModel {
     @Id

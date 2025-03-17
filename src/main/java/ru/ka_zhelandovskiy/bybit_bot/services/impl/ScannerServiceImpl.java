@@ -4,8 +4,11 @@ import com.bybit.api.client.domain.trade.Side;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.services.*;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
+
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -14,7 +17,8 @@ public class ScannerServiceImpl implements ScannerService {
     private final ParameterService parameterService;
     private final BybitService bybitService;
     private final StatisticsService statisticsService;
-
+    private final ResultService resultService;
+    private final StrategyStorageService strategyStorageService;
     private final ISService isService;
 
     @Override
@@ -37,19 +41,19 @@ public class ScannerServiceImpl implements ScannerService {
                     boolean checkToClose = false;
 
                     if (!str.isOpen()) {
-                        log.info(STR."  CHECK TO OPEN: \{str.getName()} \{instrumentName} \{str.getSide()}");
+                        log.info(STR."  CHECK TO OPEN: \{str.getName()} \{instrumentName}");
 
                         checkToOpen = str.checkToOpen(isService);
 
-                        log.info(STR."  RETURN \{checkToOpen}");
-
+                        log.info(STR."  RETURN \{checkToOpen} \{str.getSide()}");
                     }
+
                     if (str.isOpen()) {
-                        log.info(STR."  CHECK TO CLOSE: \{str.getName()} \{instrumentName} \{str.getSide()}");
+                        log.info(STR."  CHECK TO CLOSE: \{str.getName()} \{instrumentName}");
 
                         checkToClose = str.checkToClose(isService);
 
-                        log.info(STR."  RETURN \{checkToClose}");
+                        log.info(STR."  RETURN \{checkToClose} \{str.getSide()}");
                     }
 
                     if (checkToOpen) {
@@ -65,16 +69,12 @@ public class ScannerServiceImpl implements ScannerService {
                     if (checkToClose) {
                         str.setOpen(false);
                         str.setPriceClose(instrumentService.getCurrentPrice(str.getInstrumentName()));
-                        if (!parameterService.isTestMode() && str.getName().equals("maxCh_120SlMax")) {
-                            log.info(STR."TRY CLOSE ORDER: \{str.getInstrumentName()} \{str.getSide()} \{str.getName()}");
 
-                            Side side = str.getSide() == Side.BUY ? Side.SELL : Side.BUY;
-
-                            log.info(bybitService.closeOrder(str.getInstrumentName(), side));
-                        }
+                        checkForCloseOrder(str);
 
                         strategyService.calcMaxProfitLosePercent(str);
                         strategyService.calcProfitSum(str);
+                        resultService.incrementsResult(str.getName(), str.getProfitSumWoFee());
                         statisticsService.addRecord(str);
                         strategyService.send(str);
                         strategyService.resetSLTPPercent(str);
@@ -83,15 +83,31 @@ public class ScannerServiceImpl implements ScannerService {
 
                 });
         System.out.println("----------------------");
+        strategyStorageService.save(isService.getFinalStrategyList());
+        log.info("FILE SAVED");
     }
 
     private void checkForPlaceOrder(Strategy str, InstrumentService instrumentService) {
+        if (!parameterService.isTestMode() && str.isAllowOrder()) {
+            Map<String, Integer> leverages = (Map<String, Integer>) str.getParameters().get("leverages");
+            String quantity;
+            int leverage = 0;
+            if (leverages != null) {
+                leverage = leverages.get(str.getInstrumentName());
+                quantity = instrumentService.getQuantity(str.getInstrumentName(), SumType.real_sum, leverage);
+            } else
+                quantity = instrumentService.getQuantity(str.getInstrumentName(), SumType.real_sum);
 
-        if (!parameterService.isTestMode() && str.isActive()) {
-            String quantity = instrumentService.getQuantity(str.getInstrumentName());
-            log.info(STR."TRY OPEN ORDER: \{str.getInstrumentName()} \{quantity} \{str.getSide()} \{str.getName()}");
-
+            log.info(STR."TRY OPEN ORDER: \{str.getInstrumentName()}(x\{leverage}) \{quantity} \{str.getSide()} \{str.getName()}");
             log.info(bybitService.placeOrder(str.getInstrumentName(), quantity, str.getSide()));
+        }
+    }
+
+    private void checkForCloseOrder(Strategy str) {
+        if (!parameterService.isTestMode() && str.isAllowOrder()) {
+            log.info(STR."TRY CLOSE ORDER: \{str.getInstrumentName()} \{str.getSide()} \{str.getName()}");
+            Side side = str.getSide() == Side.BUY ? Side.SELL : Side.BUY;
+            log.info(bybitService.closeOrder(str.getInstrumentName(), side));
         }
     }
 
