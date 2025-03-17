@@ -3,6 +3,7 @@ package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 import com.bybit.api.client.domain.trade.Side;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.services.*;
@@ -22,6 +23,7 @@ public class ScannerServiceImpl implements ScannerService {
     private final ISService isService;
 
     @Override
+    @Scheduled(fixedDelay = 1000L)
     public void start() {
         System.out.println("****************************");
         parameterService.getAllParameters().forEach(System.out::println);
@@ -32,59 +34,63 @@ public class ScannerServiceImpl implements ScannerService {
         InstrumentService instrumentService = isService.getInstrumentService();
         StrategyService strategyService = isService.getStrategyService();
 
-        isService.getFinalStrategyList()
-                .forEach(str -> {
-                    String instrumentName = str.getInstrumentName();
-                    log.info("---------------------------------------------------------------");
+        instrumentService.refreshCandlesticks(30);
 
-                    boolean checkToOpen = false;
-                    boolean checkToClose = false;
-
-                    if (!str.isOpen()) {
-                        log.info(STR."  CHECK TO OPEN: \{str.getName()} \{instrumentName}");
-
-                        checkToOpen = str.checkToOpen(isService);
-
-                        log.info(STR."  RETURN \{checkToOpen} \{str.getSide()}");
-                    }
-
-                    if (str.isOpen()) {
-                        log.info(STR."  CHECK TO CLOSE: \{str.getName()} \{instrumentName}");
-
-                        checkToClose = str.checkToClose(isService);
-
-                        log.info(STR."  RETURN \{checkToClose} \{str.getSide()}");
-                    }
-
-                    if (checkToOpen) {
-                        str.setOpen(true);
-
-                        checkForPlaceOrder(str, instrumentService);
-
+        if (!parameterService.isTestMode()) {
+            isService.getFinalStrategyList()
+                    .forEach(str -> {
+                        String instrumentName = str.getInstrumentName();
                         log.info("---------------------------------------------------------------");
 
-                        strategyService.send(str);
-                    }
+                        boolean checkToOpen = false;
+                        boolean checkToClose = false;
 
-                    if (checkToClose) {
-                        str.setOpen(false);
-                        str.setPriceClose(instrumentService.getCurrentPrice(str.getInstrumentName()));
+                        if (!str.isOpen()) {
+                            log.info(STR."  CHECK TO OPEN: \{str.getName()} \{instrumentName}");
 
-                        checkForCloseOrder(str);
+                            checkToOpen = str.checkToOpen(isService);
 
-                        strategyService.calcMaxProfitLosePercent(str);
-                        strategyService.calcProfitSum(str);
-                        resultService.incrementsResult(str.getName(), str.getProfitSumWoFee());
-                        statisticsService.addRecord(str);
-                        strategyService.send(str);
-                        strategyService.resetSLTPPercent(str);
-                        strategyService.resetSide(str);
-                    }
+                            log.info(STR."  RETURN \{checkToOpen} \{str.getSide()}");
+                        }
 
-                });
-        System.out.println("----------------------");
-        strategyStorageService.save(isService.getFinalStrategyList());
-        log.info("FILE SAVED");
+                        if (str.isOpen()) {
+                            log.info(STR."  CHECK TO CLOSE: \{str.getName()} \{instrumentName}");
+
+                            checkToClose = str.checkToClose(isService);
+
+                            log.info(STR."  RETURN \{checkToClose} \{str.getSide()}");
+                        }
+
+                        if (checkToOpen) {
+                            str.setOpen(true);
+
+                            checkForPlaceOrder(str, instrumentService);
+
+                            log.info("---------------------------------------------------------------");
+
+                            strategyService.send(str);
+                        }
+
+                        if (checkToClose) {
+                            str.setOpen(false);
+                            str.setPriceClose(instrumentService.getCurrentPrice(str.getInstrumentName()));
+
+                            checkForCloseOrder(str);
+
+                            strategyService.calcMaxProfitLosePercent(str);
+                            strategyService.calcProfitSum(str);
+                            resultService.incrementsResult(str.getName(), str.getProfitSumWoFee());
+                            statisticsService.addRecord(str);
+                            strategyService.send(str);
+                            strategyService.resetSLTPPercent(str);
+                            strategyService.resetSide(str);
+                        }
+
+                    });
+            System.out.println("----------------------");
+            strategyStorageService.save(isService.getFinalStrategyList());
+            log.info("FILE SAVED");
+        }
     }
 
     private void checkForPlaceOrder(Strategy str, InstrumentService instrumentService) {

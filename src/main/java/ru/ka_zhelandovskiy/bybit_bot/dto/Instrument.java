@@ -16,7 +16,6 @@ public class Instrument {
     private int qp;
     private boolean ignore;
     private boolean reverse;
-    private AverageMove averageMove;
     private double maxChange;
     private List<Candlestick> candlestickList;
     private Map<Integer, Candlestick> candlesticksList;
