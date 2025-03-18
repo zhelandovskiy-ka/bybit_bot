@@ -1,7 +1,8 @@
 package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.models.ParametersModel;
@@ -13,18 +14,23 @@ import java.util.List;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ParameterServiceImpl implements ParameterService {
-    @Autowired
-    private ParametersRepository parametersRepository;
+    private final ParametersRepository parametersRepository;
+
+    @PostConstruct
+    private void showParameters() {
+        System.out.println("****************************");
+        getAllParameters().forEach(System.out::println);
+        System.out.println("****************************");
+    }
 
     @Override
-//    @Cacheable("parametersCache")
     public ParametersModel getParameter(String parameter) {
         return parametersRepository.findByParameter(parameter);
     }
 
     @Override
-//    @Cacheable("parametersCache")
     public List<ParametersModel> getAllParameters() {
         return parametersRepository.findAll();
     }

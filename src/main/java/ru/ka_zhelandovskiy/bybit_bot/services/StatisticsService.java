@@ -13,8 +13,14 @@ public interface StatisticsService {
      */
     StatisticsModel addRecord(Strategy strategy);
 
+    /**
+     * Обновить данные записи в таблице statistics
+     */
     StatisticsModel updateRecord(Strategy strategy);
 
+    /**
+     * Удалить запись из statistics
+     */
     boolean deleteRecord(int id);
 
     /**
@@ -53,4 +59,6 @@ public interface StatisticsService {
     List<SideProfitDto> getProfitSidesByStrategyAndInstruments(String strategyName);
 
     StatisticsModel getByNumber(int id);
+
+    void deleteAllByStrategyName(String strategyName);
 }

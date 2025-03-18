@@ -53,38 +53,27 @@ public class ScalpMinMaxVolStrategy extends Strategy {
         double prevPrice = instrument.getPrevPriceClose();
         double avgVolume = instrument.getAvgVolume();
 
-        log.info(cndst.toString());
-        log.info(prevCndst.toString());
+        log.info("    {}", cndst.toString());
+        log.info("    {}", prevCndst.toString());
 
         boolean conditionToOpen = false;
 
-//        log.info(STR."1. currentPrice > maxPosition && currentVolume > (avgVolume * 2) | \{currentPrice} > \{maxPosition} && \{currentVolume} > \{avgVolume * 2}");
         if (currentPrice > maxPosition && currentVolume > (avgVolume * 2)) {
             conditionToOpen = true;
             if (reverse)
                 setSide(Side.BUY);
             else
                 setSide(Side.SELL);
-//            log.info(STR."    1. \{getInstrumentName()} conditionToOpen is \{conditionToOpen}");
         }
 
-//        log.info(STR."2. currentPrice < minPosition && currentVolume > (avgVolume * 2) | \{currentPrice} < \{minPosition} && \{currentVolume} > \{avgVolume * 2}");
-        if (currentPrice < minPosition && currentVolume > (avgVolume * 2)) {
+       if (currentPrice < minPosition && currentVolume > (avgVolume * 2)) {
             conditionToOpen = true;
             if (reverse)
                 setSide(Side.SELL);
             else
                 setSide(Side.BUY);
-//            log.info(STR."    2. \{getInstrumentName()} conditionToOpen is \{conditionToOpen}");
         }
 
-        /*log.info(STR
-                ."""
-                3. currentPrice > maxOverPosition && prevPrice > instrument.getMaxPrice()
-                    && (prevVolume > (avgVolume * 2) || currentVolume > (avgVolume * 2))
-                | \{currentPrice} > \{maxOverPosition} && \{prevPrice} > \{instrument.getMaxPriceClose()}
-                    && (\{prevVolume} > \{avgVolume * 2}) || \{currentVolume} > \{avgVolume * 2}
-                """);*/
         if (currentPrice > maxOverPosition
                 && prevPrice > instrument.getMaxPriceClose()
                 && (prevVolume > (avgVolume * 2) || currentVolume > (avgVolume * 2))) {
@@ -94,16 +83,8 @@ public class ScalpMinMaxVolStrategy extends Strategy {
                 setSide(Side.SELL);
             else
                 setSide(Side.BUY);
-//            log.info(STR."    3. \{getInstrumentName()} conditionToOpen is \{conditionToOpen}");
         }
 
-/*        log.info(STR
-                ."""
-                4. currentPrice < minOverPosition && prevPrice > instrument.getMinPrice()
-                    && (prevVolume > (avgVolume * 2) || currentVolume > (avgVolume * 2))
-                | \{currentPrice} > \{minOverPosition} && \{prevPrice} > \{instrument.getMinPriceClose()}
-                    && (\{prevVolume} > \{avgVolume * 2}) || \{currentVolume} > \{avgVolume * 2}
-                """);*/
         if (currentPrice < minOverPosition
                 && prevPrice < instrument.getMinPriceClose()
                 && (prevVolume > (avgVolume * 2) || currentVolume > (avgVolume * 2))) {
@@ -113,7 +94,6 @@ public class ScalpMinMaxVolStrategy extends Strategy {
                 setSide(Side.BUY);
             else
                 setSide(Side.SELL);
-//            log.info(STR."    4. \{getInstrumentName()} conditionToOpen is \{conditionToOpen}");
         }
 
         if (conditionToOpen) {

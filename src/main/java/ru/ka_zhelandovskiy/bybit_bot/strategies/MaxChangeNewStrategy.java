@@ -59,13 +59,10 @@ public class MaxChangeNewStrategy extends Strategy {
         double maxChange = instrument.getMaxChange() + (instrument.getMaxChange() * maxChangeShift);
 
         boolean conditionToOpen = priceChange >= maxChange;
-        log.info(STR."    current price: \{currentPrice}");
-        log.info(STR."    \{instrument.getSymbol()} | \{getName()} checkToOpen priceChange >= getMaxChange \{Utilities.roundDouble(priceChange)} >= \{maxChange}?");
+        log.info(STR."    priceChange >= maxChange \{Utilities.roundDouble(priceChange)} >= \{maxChange}?");
 
 
         if (conditionToOpen) {
-            log.info(STR."    \{getInstrumentName()} conditionToOpen is \{conditionToOpen}");
-
             setPriceOpen(instrument.getCurrentPrice());
 
             if (getSide() == null) {

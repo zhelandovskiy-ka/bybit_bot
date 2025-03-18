@@ -5,6 +5,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.ka_zhelandovskiy.bybit_bot.models.ResultsModel;
 import ru.ka_zhelandovskiy.bybit_bot.services.ResultService;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/result")
 @RequiredArgsConstructor
@@ -15,5 +17,10 @@ public class ResultController {
     @PostMapping("/undo/{id}")
     public ResultsModel undoResultById(@PathVariable int id) {
         return resultService.undoResult(id);
+    }
+
+    @PostMapping("/undos")
+    public List<ResultsModel> undoResultByIds(@RequestBody int[] ids) {
+        return resultService.undosResult(ids);
     }
 }

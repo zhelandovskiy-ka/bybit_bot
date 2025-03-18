@@ -260,8 +260,8 @@ public class StrategyServiceImpl implements StrategyService {
 
     @Override
     public double getPriceChangePercent(double priceOpen, double price) {
-        log.info(STR."    cndst.priceOpen: \{priceOpen} curPrice: \{price}");
         double profit = (price - priceOpen) / priceOpen * 100;
+        log.info(STR."    CDL.PO: \{priceOpen} CP: \{price} PR: \{profit}");
 
         return profit < 0 ? profit * -1 : profit;
     }

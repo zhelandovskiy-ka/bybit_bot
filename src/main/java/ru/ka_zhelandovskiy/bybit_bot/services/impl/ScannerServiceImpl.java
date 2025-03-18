@@ -3,6 +3,7 @@ package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 import com.bybit.api.client.domain.trade.Side;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
@@ -23,21 +24,18 @@ public class ScannerServiceImpl implements ScannerService {
     private final StrategyStorageService strategyStorageService;
     private final ISService isService;
 
+    @Value("${config.test-mode:false}")
+    boolean testMode;
+
     @Override
     @Scheduled(fixedDelay = 1000L)
     public void start() {
-        System.out.println("****************************");
-        parameterService.getAllParameters().forEach(System.out::println);
-        System.out.println("****************************");
-        isService.getFinalStrategyList().forEach(System.out::println);
-        System.out.println("****************************");
-
         InstrumentService instrumentService = isService.getInstrumentService();
         StrategyService strategyService = isService.getStrategyService();
 
         instrumentService.refreshCandlesticks(30);
 
-        if (!parameterService.isTestMode()) {
+        if (!testMode) {
             isService.getFinalStrategyList()
                     .forEach(str -> {
                         String instrumentName = str.getInstrumentName();

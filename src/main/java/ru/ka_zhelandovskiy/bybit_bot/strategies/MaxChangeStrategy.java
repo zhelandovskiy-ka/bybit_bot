@@ -68,12 +68,11 @@ public class MaxChangeStrategy extends Strategy {
             maxChange = instrument.getMaxChange();
 
         boolean conditionToOpen = priceChange >= maxChange;
-        log.info(STR."    current price: \{currentPrice}");
-        log.info(STR."    \{instrument.getSymbol()} | \{getName()} checkToOpen priceChange >= getMaxChange \{Utilities.roundDouble(priceChange)} >= \{maxChange}?");
+        log.info(STR."    priceChange >= maxChange \{Utilities.roundDouble(priceChange)} >= \{maxChange}?");
 
         if (wasOpen) {
             conditionToOpen = true;
-            log.info(STR."        it wasOpen = true | setPriceOpen: \{getPriceOpen()}");
+            log.info(STR."        it wasOpen = true | setPO: \{getPriceOpen()}");
         }
 
         if (conditionToOpen) {
@@ -81,9 +80,9 @@ public class MaxChangeStrategy extends Strategy {
 
             double quantity = Double.parseDouble(is.getQuantity(getInstrumentName(), SumType.sum));
 
-            log.info(STR."    \{getInstrumentName()} conditionToOpen is \{conditionToOpen}");
-            log.info(STR."    \{getInstrumentName()} \{getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()} (getAllPrices(), getAllQuantity(), getAllBetSum())");
-            log.info(STR."    \{getAllPrices()} + \{currentPrice} * \{quantity} (getAllPrices() + currentPrice * quantity");
+//            log.info(STR."    \{getInstrumentName()} conditionToOpen is \{conditionToOpen}");
+//            log.info(STR."    \{getInstrumentName()} \{getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()} (getAllPrices(), getAllQuantity(), getAllBetSum())");
+//            log.info(STR."    \{getAllPrices()} + \{currentPrice} * \{quantity} (getAllPrices() + currentPrice * quantity");
 
             setAllPrices(getAllPrices() + (currentPrice * quantity));
             setAllQuantity(getAllQuantity() + quantity);
@@ -96,7 +95,7 @@ public class MaxChangeStrategy extends Strategy {
                 setPreviousPriceOpen(cndst.getPriceOpen());
             }
 
-            log.info(STR."    \{getInstrumentName()} \{getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()} (getAllPrices(), getAllQuantity(), getAllBetSum())");
+//            log.info(STR."    \{getInstrumentName()} \{getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()} (getAllPrices(), getAllQuantity(), getAllBetSum())");
 
             if (getSide() == null) {
                 if (currentPrice < cndst.getPriceOpen())

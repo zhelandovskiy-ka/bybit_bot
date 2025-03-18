@@ -12,6 +12,7 @@ import ru.ka_zhelandovskiy.bybit_bot.models.ResultsModel;
 import ru.ka_zhelandovskiy.bybit_bot.repository.ResultsRepository;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -111,6 +112,28 @@ public class ResultServiceImpl implements ResultService {
     }
 
     @Override
+    public void resetAll(String name) {
+        ResultsModel result = getResult(name);
+        result.setAllMinus(0);
+        result.setAllPlus(0);
+        result.setAllMinusMoney(0);
+        result.setAllPlusMoney(0);
+        result.setAvgLose(0);
+        result.setAvgWin(0);
+        result.setBank(0);
+        result.setDayMinus(0);
+        result.setDayPlus(0);
+        result.setDayMoney(0);
+        result.setMaxProfit(0);
+        result.setMaxLose(0);
+        result.setStartBank(0);
+
+        ResultsModel saved = resultsRepository.save(result);
+
+        log.info("RESET RESULT: {}", saved);
+    }
+
+    @Override
     public void sendDayStats(Strategy str) {
         telegramConfig.telegramBot().sendMsg(str.getChannelId(), getResultMessage(str.getName()));
     }
@@ -190,5 +213,15 @@ public class ResultServiceImpl implements ResultService {
         statisticsService.deleteRecord(id);
 
         return resultsRepository.save(resultsModel);
+    }
+
+    @Override
+    public List<ResultsModel> undosResult(int[] ids) {
+        List<ResultsModel> resultsModelList = new ArrayList<>();
+
+        for (int id : ids) {
+            resultsModelList.add(undoResult(id));
+        }
+        return resultsModelList;
     }
 }

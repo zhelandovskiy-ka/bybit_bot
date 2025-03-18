@@ -15,10 +15,10 @@ import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "${config.url:http://localhost:8081}")
-@RequiredArgsConstructor
 @RestController
 @RequestMapping
+@RequiredArgsConstructor
+@CrossOrigin(origins = "${config.url:http://localhost:8081}")
 public class StrategyController {
 
     private final StrategyService strategyService;
@@ -109,6 +109,14 @@ public class StrategyController {
     @ResponseBody
     public List<Double> getInstrumentChartData(@PathVariable String strategyName, @PathVariable String instrument) {
         return statisticsService.getProfitSumByStrategyAndInstrument(strategyName, instrument, 100);
+    }
+
+    @PostMapping("/undo/{strategyName}")
+    public void undoStrategyData(@PathVariable String strategyName) {
+
+        statisticsService.deleteAllByStrategyName(strategyName);
+        resultsService.resetAll(strategyName);
+
     }
 }
 

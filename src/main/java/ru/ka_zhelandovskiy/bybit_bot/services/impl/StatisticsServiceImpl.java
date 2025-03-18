@@ -33,18 +33,19 @@ public class StatisticsServiceImpl implements StatisticsService {
         sm.setOpen(s.getPriceOpen());
 
         StatisticsModel statisticsModel = statisticsRepository.save(sm);
-        
-        log.info(STR."ADD NEW RECORD TO STATISTICS: \{statisticsModel.toString()}");
+
+        log.info(STR."    ADD TO STATISTICS: \{statisticsModel.getNumber()}");
 
         return statisticsModel;
     }
 
     @Override
     public StatisticsModel updateRecord(Strategy s) {
-        if (statisticsRepository.findById(s.getNumber()).isPresent()) {
+        Optional<StatisticsModel> statisticsModelOptional = statisticsRepository.findById(s.getNumber());
+        if (statisticsModelOptional.isPresent()) {
             int result = s.getProfitSum() < 0 ? 0 : 1;
 
-            StatisticsModel sm = new StatisticsModel();
+            StatisticsModel sm = statisticsModelOptional.get();
 
             sm.setNumber(s.getNumber());
             sm.setClose(s.getPriceClose());
@@ -68,6 +69,7 @@ public class StatisticsServiceImpl implements StatisticsService {
     @Override
     public boolean deleteRecord(int id) {
         statisticsRepository.deleteById(id);
+
         return true;
     }
 
@@ -231,6 +233,18 @@ public class StatisticsServiceImpl implements StatisticsService {
     public StatisticsModel getByNumber(int id) {
         return statisticsRepository.findById(id).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "record mot found"));
+    }
+
+    @Override
+    public void deleteAllByStrategyName(String strategyName) {
+        List<Integer> ids = statisticsRepository.findByStrategy(strategyName).stream()
+                .map(statisticsModel -> {
+                    log.info("ADD ID TO REMOVE: {}", statisticsModel.getNumber());
+                    return statisticsModel.getNumber();
+                })
+                .toList();
+
+        statisticsRepository.deleteAllById(ids);
     }
 
     public static Double getFirstNotNull(Map<Integer, Double> map) {

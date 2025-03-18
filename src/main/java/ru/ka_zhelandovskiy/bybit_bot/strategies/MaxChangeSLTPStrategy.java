@@ -6,13 +6,13 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Candlestick;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Instrument;
+import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
 import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
 import java.util.List;
-
 
 @Slf4j
 @AllArgsConstructor
@@ -61,16 +61,23 @@ public class MaxChangeSLTPStrategy extends Strategy {
         double maxChange = instrument.getMaxChange();
 
         boolean conditionToOpen = priceChange >= maxChange;
-        log.info(STR."    current price: \{currentPrice}");
-        log.info(STR."    \{instrument.getSymbol()} | \{getName()} checkToOpen priceChange >= getMaxChange \{Utilities.roundDouble(priceChange)} >= \{maxChange}?");
+        log.info(STR."    CP: \{currentPrice}");
+        log.info(STR."    priceChange >= maxChange \{Utilities.roundDouble(priceChange)} >= \{maxChange}?");
+
+        if (!conditionToOpen)
+            conditionToOpen = countOpen > 0;
 
         if (conditionToOpen) {
-            log.info(STR."    \{getInstrumentName()} conditionToOpen is \{conditionToOpen}");
+            setAllBetSum(getAllBetSum() + is.getSumWithLeverage(SumType.sum, getInstrumentName()));
 
-            if (getPriceOpen() == 0.0)
-                setPriceOpen(instrument.getCurrentPrice());
-            else
-                setPriceOpen((instrument.getCurrentPrice() + getPriceOpen() / 2));
+            if (getPriceOpen() == 0.0) {
+                setPriceOpen(currentPrice);
+                setPreviousPriceOpen(cndst.getPriceOpen());
+            }
+            else {
+                setPreviousPriceOpen(getPriceOpen());
+                setPriceOpen((currentPrice + getPriceOpen()) / 2);
+            }
 
             this.countOpen += 1;
 
@@ -92,29 +99,36 @@ public class MaxChangeSLTPStrategy extends Strategy {
         double profitPercent = ss.getProfitPercent(this);
 
         log.info(STR."    check SL: \{profitPercent} <= \{getSlPercent()}");
+        log.info(STR."    check TP: \{profitPercent} >= \{getTpPercent()}");
 
         if (profitPercent >= getTpPercent() * miniTp) {
-            setSlPercent(0.001);
-            slChanged = true;
-        }
-
-        if (profitPercent <= getSlPercent()) {
-            if (slChanged)
-                return true;
-
-            if (this.countOpen == maxCountOpen)
-                return true;
-            else {
-                setOpen(false);
+            double newSlPercent = profitPercent - (getTpPercent() * miniTp) + 0.03;
+            if (newSlPercent > getSlPercent()) {
+                setSlPercent(newSlPercent);
+                slChanged = true;
+                log.info(STR."        SL changed: \{getSlPercent()}");
             }
         }
 
-        log.info(STR."    check TP: \{profitPercent} >= \{getTpPercent()}");
-        if (profitPercent >= getTpPercent()) {
-            return true;
+        boolean result = false;
+
+        if (profitPercent <= getSlPercent()) {
+            if (slChanged)
+                result = true;
+
+            if (this.countOpen == maxCountOpen)
+                result = true;
+            else {
+                setOpen(false);
+            }
+        } else
+            result = profitPercent >= getTpPercent();
+
+        if (result) {
+            countOpen = 0;
         }
 
-        return false;
+        return result;
     }
 
     @Override
@@ -135,7 +149,7 @@ public class MaxChangeSLTPStrategy extends Strategy {
 
         #\{getInstrumentName()} PO: \{getPriceOpen()}
 
-        Ставка: \{sumWithLeverage} Вся ставка: \{getAllBetSum()} №\{countOpen}
+        Ставка (\{countOpen}): \{sumWithLeverage} Вся ставка: \{getAllBetSum()}
 
         \{direction} \{Utilities.roundDouble(getPreviousPriceOpen())} -> \{Utilities.roundDouble(currentPrice)} (\{Utilities.roundDouble(profit)}%) | \{instrument.getMaxChange()}
 

@@ -16,6 +16,8 @@ public interface ResultService {
 
     void resetDay(String name);
 
+    void resetAll(String name);
+
     void sendDayStats(Strategy str);
 
     String getResultMessage(String name);
@@ -31,4 +33,6 @@ public interface ResultService {
     List<ResultsModel> getAllResult();
 
     ResultsModel undoResult(int id);
+
+    List<ResultsModel> undosResult(int[] ids);
 }
