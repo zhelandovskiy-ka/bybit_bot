@@ -2,16 +2,12 @@ package ru.ka_zhelandovskiy.bybit_bot.configurations;
 
 import com.bybit.api.client.domain.market.MarketInterval;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Repository;
-import ru.ka_zhelandovskiy.bybit_bot.models.enums.Parameter;
-import ru.ka_zhelandovskiy.bybit_bot.repository.ParametersRepository;
+import org.springframework.context.annotation.Configuration;
 import ru.ka_zhelandovskiy.bybit_bot.services.ParameterService;
-import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 
 @Slf4j
-@Repository
+@Configuration
 public class IntervalsConfig {
     private final ParameterService parameterService;
     @Value("${bot.config.timeframe:0}")

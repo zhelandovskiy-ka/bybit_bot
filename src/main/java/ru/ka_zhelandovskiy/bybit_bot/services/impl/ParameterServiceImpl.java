@@ -4,7 +4,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
+import ru.ka_zhelandovskiy.bybit_bot.enums.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.models.ParametersModel;
 import ru.ka_zhelandovskiy.bybit_bot.models.enums.Parameter;
 import ru.ka_zhelandovskiy.bybit_bot.repository.ParametersRepository;
@@ -89,7 +89,7 @@ public class ParameterServiceImpl implements ParameterService {
     public void showCurrentParameters() {
         log.info("========================================");
 
-        parametersRepository.findAll().forEach(p -> log.info(p.getParameter() + ": " + p.getValue()));
+        parametersRepository.findAll().forEach(p -> log.info("{}: {}", p.getParameter(), p.getValue()));
 
         log.info("========================================");
     }

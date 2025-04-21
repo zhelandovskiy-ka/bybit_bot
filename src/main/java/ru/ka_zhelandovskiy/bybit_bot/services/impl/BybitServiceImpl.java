@@ -20,12 +20,21 @@ import com.google.gson.JsonObject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.ka_zhelandovskiy.bybit_bot.configurations.IntervalsConfig;
-import ru.ka_zhelandovskiy.bybit_bot.dto.*;
+import ru.ka_zhelandovskiy.bybit_bot.dto.Candlestick;
+import ru.ka_zhelandovskiy.bybit_bot.dto.InstrumentInfo;
+import ru.ka_zhelandovskiy.bybit_bot.dto.KlineResponse;
+import ru.ka_zhelandovskiy.bybit_bot.dto.OpenOrderResponse;
+import ru.ka_zhelandovskiy.bybit_bot.dto.Order;
+import ru.ka_zhelandovskiy.bybit_bot.dto.OrderBookResponse;
+import ru.ka_zhelandovskiy.bybit_bot.dto.OrderResponse;
 import ru.ka_zhelandovskiy.bybit_bot.mapper.CandlestickMapper;
 import ru.ka_zhelandovskiy.bybit_bot.services.BybitService;
 import ru.ka_zhelandovskiy.bybit_bot.services.ParameterService;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -33,10 +42,12 @@ public class BybitServiceImpl implements BybitService {
     private final BybitApiClientFactory client;
     private final CandlestickMapper candlestickMapper;
     private final IntervalsConfig intervalsConfig;
+    private final ObjectMapper mapper;
 
-    public BybitServiceImpl(CandlestickMapper candlestickMapper, IntervalsConfig intervalsConfig, ParameterService parameterService) {
+    public BybitServiceImpl(CandlestickMapper candlestickMapper, IntervalsConfig intervalsConfig, ParameterService parameterService, ObjectMapper mapper) {
         this.candlestickMapper = candlestickMapper;
         this.intervalsConfig = intervalsConfig;
+        this.mapper = mapper;
 
         String apiKey = parameterService.getApiKey();
         String secretKey = parameterService.getSecretKey();
@@ -60,6 +71,89 @@ public class BybitServiceImpl implements BybitService {
                 .build();
 
         return tradeRestClient.createOrder(tradeOrderRequest).toString();
+    }
+
+    @Override
+    public OrderResponse placeLimitOrder(String symbol, String qty, Side side, String price) {
+        BybitApiTradeRestClient tradeRestClient = client.newTradeRestClient();
+        TradeOrderRequest tradeOrderRequest = TradeOrderRequest.builder()
+                .category(CategoryType.LINEAR)
+                .symbol(symbol)
+                .side(side)
+                .orderType(TradeOrderType.LIMIT)
+                .qty(qty)
+                .price(price)
+                .build();
+
+        Object order = tradeRestClient.createOrder(tradeOrderRequest);
+
+        return mapper.convertValue(order, OrderResponse.class);
+    }
+
+    public OrderResponse modifyLimitOrder(Order order, String price) {
+        BybitApiTradeRestClient tradeRestClient = client.newTradeRestClient();
+        TradeOrderRequest tradeOrderRequest = TradeOrderRequest.builder()
+                .orderId(order.getOrderId())
+                .category(CategoryType.LINEAR)
+                .symbol(order.getSymbol())
+                .price(price)
+                .build();
+
+        Object modifiedOrder = tradeRestClient.amendOrder(tradeOrderRequest);
+
+        return mapper.convertValue(modifiedOrder, OrderResponse.class);
+    }
+
+    @Override
+    public Order getOpenOrderById(String orderId) {
+        BybitApiTradeRestClient tradeRestClient = client.newTradeRestClient();
+
+        Object openOrders = tradeRestClient.getOpenOrders(TradeOrderRequest.builder()
+                .category(CategoryType.LINEAR)
+                .orderId(orderId)
+                .build());
+
+        OpenOrderResponse openOrderResponse = mapper.convertValue(openOrders, OpenOrderResponse.class);
+
+        return openOrderResponse.getResult().getList().getFirst();
+    }
+
+    @Override
+    public List<Order> getOpenOrder() {
+        BybitApiTradeRestClient tradeRestClient = client.newTradeRestClient();
+
+        Object openOrders = tradeRestClient.getOpenOrders(TradeOrderRequest.builder()
+                .category(CategoryType.LINEAR)
+                .settleCoin("USDT")
+                .build());
+
+        OpenOrderResponse openOrderResponse = mapper.convertValue(openOrders, OpenOrderResponse.class);
+
+        if (!openOrderResponse.getRetMsg().equals("OK"))
+            log.info("receive open order error: {}, code: {}", openOrderResponse.getRetMsg(), openOrderResponse.getRetCode());
+
+        return openOrderResponse.getResult().getList();
+    }
+
+    @Override
+    public String getPriceFromOrderBook(String symbol, Side side) {
+        OrderBookResponse orderBook = getOrderBook(symbol, 1);
+
+        String price = "";
+
+        if (orderBook != null) {
+            if (side == Side.BUY) {
+                Double newPrice = orderBook.getResult().getBid().getFirst().getFirst();
+                price = String.valueOf(newPrice);
+            }
+            if (side == Side.SELL) {
+                Double newPrice = orderBook.getResult().getAsk().getFirst().getFirst();
+                price = String.valueOf(newPrice);
+            }
+        }
+        log.info("GET PRICE FROM ORDER BOOK, {}, price {}", symbol, price);
+
+        return price;
     }
 
     @Override
@@ -90,19 +184,16 @@ public class BybitServiceImpl implements BybitService {
                 .toString();
     }
 
-    private String parseJson(Object response) {
-        String jsonResponse = new Gson().toJson(response);
+    @Override
+    public OrderBookResponse getOrderBook(String symbol, int limit) {
+        BybitApiMarketRestClient bybitApiMarketRestClient = client.newMarketDataRestClient();
+        Object orderBook = bybitApiMarketRestClient.getMarketOrderBook(MarketDataRequest.builder()
+                .category(CategoryType.LINEAR)
+                .symbol(symbol)
+                .limit(limit)
+                .build());
 
-        // Преобразуем JSON строку в JsonObject
-        JsonObject jsonObject = new Gson().fromJson(jsonResponse, JsonObject.class);
-
-        JsonObject result = jsonObject.getAsJsonObject("result");
-
-        JsonArray list = result.getAsJsonArray("list");
-
-        JsonObject firstCandlestick = list.get(0).getAsJsonObject();
-
-        return firstCandlestick.get("lastPrice").getAsString();
+        return mapper.convertValue(orderBook, OrderBookResponse.class);
     }
 
     @Override
@@ -120,11 +211,10 @@ public class BybitServiceImpl implements BybitService {
                 .limit(limit)
                 .build();
 
-        LinkedHashMap<String, String> map = (LinkedHashMap<String, String>) marketDataRestClient.getMarketLinesData(marketDataRequest);
-        ObjectMapper mapper = new ObjectMapper();
-        Kline kline = mapper.convertValue(map, Kline.class);
+        Object history = marketDataRestClient.getMarketLinesData(marketDataRequest);
+        KlineResponse klineResponse = mapper.convertValue(history, KlineResponse.class);
 
-        return candlestickMapper.mapListObjectToListCandlestick(kline.getResult().getList());
+        return candlestickMapper.mapListObjectToListCandlestick(klineResponse.getResult().getList());
     }
 
     @Override
@@ -139,11 +229,10 @@ public class BybitServiceImpl implements BybitService {
 
                 .build();
 
-        LinkedHashMap<String, String> map = (LinkedHashMap<String, String>) marketDataRestClient.getMarketLinesData(marketDataRequest);
-        ObjectMapper mapper = new ObjectMapper();
-        Kline kline = mapper.convertValue(map, Kline.class);
+        Object history = marketDataRestClient.getMarketLinesData(marketDataRequest);
+        KlineResponse klineResponse = mapper.convertValue(history, KlineResponse.class);
 
-        return candlestickMapper.mapListObjectToListCandlestick(kline.getResult().getList());
+        return candlestickMapper.mapListObjectToListCandlestick(klineResponse.getResult().getList());
     }
 
     @Override
@@ -159,11 +248,11 @@ public class BybitServiceImpl implements BybitService {
                 .end(end)
                 .build();
 
-        LinkedHashMap<String, String> map = (LinkedHashMap<String, String>) marketDataRestClient.getMarketLinesData(marketDataRequest);
-        ObjectMapper mapper = new ObjectMapper();
-        Kline kline = mapper.convertValue(map, Kline.class);
+        Object history = marketDataRestClient.getMarketLinesData(marketDataRequest);
 
-        return candlestickMapper.mapListObjectToListCandlestick(kline.getResult().getList());
+        KlineResponse klineResponse = mapper.convertValue(history, KlineResponse.class);
+
+        return candlestickMapper.mapListObjectToListCandlestick(klineResponse.getResult().getList());
     }
 
     @Override
@@ -212,5 +301,17 @@ public class BybitServiceImpl implements BybitService {
                                 entry.get("lastPrice")
                         )
                 ).toList();
+    }
+
+    private String parseJson(Object response) {
+        String jsonResponse = new Gson().toJson(response);
+
+        // Преобразуем JSON строку в JsonObject
+        JsonObject jsonObject = new Gson().fromJson(jsonResponse, JsonObject.class);
+        JsonObject result = jsonObject.getAsJsonObject("result");
+        JsonArray list = result.getAsJsonArray("list");
+        JsonObject firstCandlestick = list.get(0).getAsJsonObject();
+
+        return firstCandlestick.get("lastPrice").getAsString();
     }
 }

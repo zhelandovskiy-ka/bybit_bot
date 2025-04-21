@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jvnet.hk2.annotations.Service;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Candlestick;
-import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
+import ru.ka_zhelandovskiy.bybit_bot.enums.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.models.SmaResultsModel;
 import ru.ka_zhelandovskiy.bybit_bot.services.BybitService;
 import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;

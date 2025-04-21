@@ -1,6 +1,6 @@
 package ru.ka_zhelandovskiy.bybit_bot.services;
 
-import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
+import ru.ka_zhelandovskiy.bybit_bot.enums.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.models.ParametersModel;
 
 import java.util.List;

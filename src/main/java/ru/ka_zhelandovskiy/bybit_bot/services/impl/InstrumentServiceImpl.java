@@ -1,11 +1,10 @@
 package ru.ka_zhelandovskiy.bybit_bot.services.impl;
 
-import com.bybit.api.client.domain.market.MarketInterval;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Instrument;
-import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
+import ru.ka_zhelandovskiy.bybit_bot.enums.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.mapper.InstrumentMapper;
 import ru.ka_zhelandovskiy.bybit_bot.repository.InstrumentRepository;
 import ru.ka_zhelandovskiy.bybit_bot.services.BybitService;

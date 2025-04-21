@@ -6,9 +6,19 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
+import ru.ka_zhelandovskiy.bybit_bot.dto.OrderResponse;
+import ru.ka_zhelandovskiy.bybit_bot.enums.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.models.StatisticsModel;
-import ru.ka_zhelandovskiy.bybit_bot.services.*;
+import ru.ka_zhelandovskiy.bybit_bot.services.BybitService;
+import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
+import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
+import ru.ka_zhelandovskiy.bybit_bot.services.ParameterService;
+import ru.ka_zhelandovskiy.bybit_bot.services.ResultService;
+import ru.ka_zhelandovskiy.bybit_bot.services.ScannerService;
+import ru.ka_zhelandovskiy.bybit_bot.services.StatisticsService;
+import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
+import ru.ka_zhelandovskiy.bybit_bot.services.StrategyStorageService;
+import ru.ka_zhelandovskiy.bybit_bot.strategies.MaxChangeSLTPStrategy;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 
 import java.util.Map;
@@ -69,10 +79,20 @@ public class ScannerServiceImpl implements ScannerService {
 
                             strategyService.send(str);
 
-                            StatisticsModel sm = statisticsService.addRecord(str);
+                            StatisticsModel sm = new StatisticsModel();
 
-                            str.setNumber(sm.getNumber());
-                            strategyService.updateStrategy(str);
+                            if (str instanceof MaxChangeSLTPStrategy maxChangeSLTPStrategy) {
+                                if (maxChangeSLTPStrategy.getCountOpen() == 1) {
+                                    sm = statisticsService.addRecord(str);
+                                }
+                            } else {
+                                sm = statisticsService.addRecord(str);
+                            }
+
+                            if (sm.getNumber() != 0) {
+                                str.setNumber(sm.getNumber());
+                                strategyService.updateStrategy(str);
+                            }
                         }
 
                         if (checkToClose) {
@@ -99,17 +119,31 @@ public class ScannerServiceImpl implements ScannerService {
 
     private void checkForPlaceOrder(Strategy str, InstrumentService instrumentService) {
         if (!parameterService.isTestMode() && str.isAllowOrder()) {
-            Map<String, Integer> leverages = (Map<String, Integer>) str.getParameters().get("leverages");
-            String quantity;
-            int leverage = 0;
-            if (leverages != null) {
-                leverage = leverages.get(str.getInstrumentName());
-                quantity = instrumentService.getQuantity(str.getInstrumentName(), SumType.real_sum, leverage);
-            } else
-                quantity = instrumentService.getQuantity(str.getInstrumentName(), SumType.real_sum);
+            if (str instanceof MaxChangeSLTPStrategy strategy) {
+                if (!strategy.getBlackList().contains(str.getInstrumentName())) {
 
-            log.info(STR."TRY OPEN ORDER: \{str.getInstrumentName()}(x\{leverage}) \{quantity} \{str.getSide()} \{str.getName()}");
-            log.info(bybitService.placeOrder(str.getInstrumentName(), quantity, str.getSide()));
+                    Map<String, Integer> leverages = (Map<String, Integer>) str.getParameters().get("leverages");
+                    String quantity;
+                    int leverage = 0;
+                    if (leverages != null) {
+                        leverage = leverages.get(str.getInstrumentName());
+                        quantity = instrumentService.getQuantity(str.getInstrumentName(), SumType.real_sum, leverage);
+                    } else
+                        quantity = instrumentService.getQuantity(str.getInstrumentName(), SumType.real_sum);
+
+                    log.info(STR."TRY OPEN ORDER: \{str.getInstrumentName()}(x\{leverage}) \{quantity} \{str.getSide()} \{str.getName()}");
+
+                    String price = bybitService.getPriceFromOrderBook(str.getInstrumentName(), str.getSide());
+
+                    OrderResponse openedOrder = bybitService.placeLimitOrder(str.getInstrumentName(), quantity, str.getSide(), price);
+
+                    if (openedOrder.getRetMsg().equals("OK")) {
+                        log.info("ORDER OPENED {}", openedOrder);
+                    }
+                } else {
+                    log.info("{} IN BLACKLIST", str.getInstrumentName());
+                }
+            }
         }
     }
 
