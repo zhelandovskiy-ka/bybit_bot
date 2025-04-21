@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
 import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
-import ru.ka_zhelandovskiy.bybit_bot.util.StrategyName;
+import ru.ka_zhelandovskiy.bybit_bot.enums.StrategyType;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
 import java.util.Map;
@@ -20,12 +20,12 @@ import java.util.Map;
         property = "className"
 )
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = MaxChangeStrategy.class, name = StrategyName.maxChange),
-        @JsonSubTypes.Type(value = MaxChangeSimpleStrategy.class, name = StrategyName.maxChangeSimple),
-        @JsonSubTypes.Type(value = MaxChangeNewStrategy.class, name = StrategyName.maxChangeNew),
-        @JsonSubTypes.Type(value = MaxChangeSLTPStrategy.class, name = StrategyName.maxChangeTPSL),
-        @JsonSubTypes.Type(value = ScalpMinMaxVolStrategy.class, name = StrategyName.scalpStrategy),
-        @JsonSubTypes.Type(value = CrossSmaStrategy.class, name = StrategyName.smaStrategy)
+        @JsonSubTypes.Type(value = MaxChangeStrategy.class, name = "maxChange"),
+        @JsonSubTypes.Type(value = MaxChangeSimpleStrategy.class, name = "maxChangeSimple"),
+        @JsonSubTypes.Type(value = MaxChangeNewStrategy.class, name = "maxChangeNew"),
+        @JsonSubTypes.Type(value = MaxChangeSLTPStrategy.class, name = "maxChangeTPSL"),
+        @JsonSubTypes.Type(value = ScalpMinMaxVolStrategy.class, name = "scalpStrategy"),
+        @JsonSubTypes.Type(value = CrossSmaStrategy.class, name = "smaStrategy")
 })
 @Data
 @NoArgsConstructor
@@ -35,7 +35,7 @@ public class Strategy {
     private String name;
     private String instrumentName;
     private String channelId;
-    private String type;
+    private StrategyType type;
     private int timeFrame;
     private double priceOpen;
     private double previousPriceOpen;

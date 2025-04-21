@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.mapstruct.Mapper;
+import ru.ka_zhelandovskiy.bybit_bot.enums.StrategyType;
 import ru.ka_zhelandovskiy.bybit_bot.models.StrategyModel;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 
@@ -22,5 +23,14 @@ public interface StrategyMapper {
         }
 
         return map;
+    }
+
+    default StrategyType mapStringToStrategyType(String type) {
+        for (StrategyType strategyType : StrategyType.values()) {
+            if (strategyType.getName().equals(type))
+                return strategyType;
+        }
+
+        throw new IllegalArgumentException("Unknown strategy type: " + type);
     }
 }
