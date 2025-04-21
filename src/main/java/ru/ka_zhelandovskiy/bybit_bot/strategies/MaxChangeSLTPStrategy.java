@@ -2,33 +2,40 @@ package ru.ka_zhelandovskiy.bybit_bot.strategies;
 
 import com.bybit.api.client.domain.trade.Side;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Candlestick;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Instrument;
-import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
+import ru.ka_zhelandovskiy.bybit_bot.enums.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
 import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @AllArgsConstructor
 @NoArgsConstructor
 public class MaxChangeSLTPStrategy extends Strategy {
+    @Getter
     private List<String> blackList;
     private int maxCountOpen;
     private double miniTp;
+    private double allQuantity = 0;
+    @Getter
     private int countOpen = 0; //сколько раз сработал стоп лосс/сколько раз добавлялась позиция
     private boolean slChanged = false;
+    private Map<String, Double> maxChanges;
 
     public MaxChangeSLTPStrategy(Strategy strategy) {
         super(strategy);
         this.blackList = (List<String>) strategy.getParameters().get("blackList");
         this.maxCountOpen = (int) strategy.getParameters().get("maxCountOpen");
         this.miniTp = (double) strategy.getParameters().get("miniTp");
+        this.maxChanges = (Map<String, Double>) strategy.getParameters().get("maxChanges");
     }
 
     @Override
@@ -43,6 +50,7 @@ public class MaxChangeSLTPStrategy extends Strategy {
                 }, blackList()=\{this.blackList
                 }, maxCountSL()=\{this.maxCountOpen
                 }, miniTp()=\{this.miniTp
+                }, maxChanges()=\{maxChanges
                 }}";
     }
 
@@ -52,13 +60,18 @@ public class MaxChangeSLTPStrategy extends Strategy {
         StrategyService ss = isService.getStrategyService();
         Instrument instrument = is.getInstrumentByName(getInstrumentName());
 
-        if (inBlackList(instrument.getSymbol()))
-            return false;
+//        if (inBlackList(instrument.getSymbol()))
+//            return false;
 
         Candlestick cndst = instrument.getCandlestickList().getFirst();
         double currentPrice = instrument.getCurrentPrice();
         double priceChange = ss.getPriceChangePercent(cndst.getPriceOpen(), currentPrice);
-        double maxChange = instrument.getMaxChange();
+        double maxChange;
+
+        if (maxChanges != null) {
+            maxChange = maxChanges.get(getInstrumentName());
+        } else
+            maxChange = instrument.getMaxChange();
 
         boolean conditionToOpen = priceChange >= maxChange;
         log.info(STR."    CP: \{currentPrice}");
@@ -70,7 +83,8 @@ public class MaxChangeSLTPStrategy extends Strategy {
         if (conditionToOpen) {
             setAllBetSum(getAllBetSum() + is.getSumWithLeverage(SumType.sum, getInstrumentName()));
 
-            if (getPriceOpen() == 0.0) {
+            if (countOpen == 0) {
+                slChanged = false;
                 setPriceOpen(currentPrice);
                 setPreviousPriceOpen(cndst.getPriceOpen());
             }
@@ -98,11 +112,9 @@ public class MaxChangeSLTPStrategy extends Strategy {
 
         double profitPercent = ss.getProfitPercent(this);
 
-        log.info(STR."    check SL: \{profitPercent} <= \{getSlPercent()}");
         log.info(STR."    check TP: \{profitPercent} >= \{getTpPercent()}");
-
         if (profitPercent >= getTpPercent() * miniTp) {
-            double newSlPercent = profitPercent - (getTpPercent() * miniTp) + 0.03;
+            double newSlPercent = profitPercent - (getTpPercent() * miniTp) + 0.04;
             if (newSlPercent > getSlPercent()) {
                 setSlPercent(newSlPercent);
                 slChanged = true;
@@ -112,12 +124,17 @@ public class MaxChangeSLTPStrategy extends Strategy {
 
         boolean result = false;
 
+        log.info(STR."    check SL: \{profitPercent} <= \{getSlPercent()}");
         if (profitPercent <= getSlPercent()) {
-            if (slChanged)
+            if (slChanged) {
+                log.info("        SL was changed");
                 result = true;
+            }
 
-            if (this.countOpen == maxCountOpen)
+            if (this.countOpen == maxCountOpen) {
+                log.info("        countOpen = maxCountOpen, {} = {}", countOpen, maxCountOpen);
                 result = true;
+            }
             else {
                 setOpen(false);
             }

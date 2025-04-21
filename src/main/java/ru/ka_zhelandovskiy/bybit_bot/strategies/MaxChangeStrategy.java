@@ -5,7 +5,7 @@ import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Candlestick;
 import ru.ka_zhelandovskiy.bybit_bot.dto.Instrument;
-import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
+import ru.ka_zhelandovskiy.bybit_bot.enums.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.services.ISService;
 import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
@@ -80,10 +80,6 @@ public class MaxChangeStrategy extends Strategy {
 
             double quantity = Double.parseDouble(is.getQuantity(getInstrumentName(), SumType.sum));
 
-//            log.info(STR."    \{getInstrumentName()} conditionToOpen is \{conditionToOpen}");
-//            log.info(STR."    \{getInstrumentName()} \{getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()} (getAllPrices(), getAllQuantity(), getAllBetSum())");
-//            log.info(STR."    \{getAllPrices()} + \{currentPrice} * \{quantity} (getAllPrices() + currentPrice * quantity");
-
             setAllPrices(getAllPrices() + (currentPrice * quantity));
             setAllQuantity(getAllQuantity() + quantity);
             setAllBetSum(getAllBetSum() + is.getSumWithLeverage(SumType.sum, getInstrumentName()));
@@ -94,8 +90,6 @@ public class MaxChangeStrategy extends Strategy {
                 setFirstOpenPrice(currentPrice);
                 setPreviousPriceOpen(cndst.getPriceOpen());
             }
-
-//            log.info(STR."    \{getInstrumentName()} \{getAllPrices()}, \{getAllQuantity()}, \{getAllBetSum()} (getAllPrices(), getAllQuantity(), getAllBetSum())");
 
             if (getSide() == null) {
                 if (currentPrice < cndst.getPriceOpen())
@@ -131,8 +125,9 @@ public class MaxChangeStrategy extends Strategy {
         }
 
         double profitPercent = ss.getProfitPercent(this);
+        double roundProfitPercent = Utilities.roundDouble(profitPercent);
 
-        log.info(STR."     \{getInstrumentName()} \{profitPercent} <= \{miniSL}?");
+        log.info(STR."     \{getInstrumentName()} \{roundProfitPercent} <= \{miniSL}?");
 
         if (profitPercent <= miniSL) {
             wasOpen = true;
@@ -140,11 +135,11 @@ public class MaxChangeStrategy extends Strategy {
             log.info(STR."        TRUE | \{getInstrumentName()} setOpen(false) wasOpen(true)");
         }
 
-        log.info(STR."     \{getInstrumentName()} \{profitPercent} >= \{getTpPercent()} && \{profitPercent} > \{getSlPercent() + slShift}?");
+        log.info(STR."     \{getInstrumentName()} \{roundProfitPercent} >= \{getTpPercent()} && \{roundProfitPercent} > \{getSlPercent() + slShift}?");
 
         if (profitPercent >= getTpPercent() && profitPercent > getSlPercent() + slShift) {
             setSlPercent(profitPercent - slShift);
-            log.info(STR."        TRUE | SET NEW SL PERCENT: \{profitPercent} - \{slShift} = \{getSlPercent()}");
+            log.info(STR."        TRUE | SET NEW SL PERCENT: \{roundProfitPercent} - \{slShift} = \{getSlPercent()}");
         }
 
         return false;
