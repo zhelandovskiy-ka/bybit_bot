@@ -8,7 +8,7 @@ import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyStorageService;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.*;
-import ru.ka_zhelandovskiy.bybit_bot.util.StrategyName;
+import ru.ka_zhelandovskiy.bybit_bot.enums.StrategyType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +59,7 @@ public class ISServiceImpl implements ISService {
         finalStrategyList.forEach(System.out::println);
     }
 
-    public void buildStrategyList() {
+    private void buildStrategyList() {
         instrumentService.getSymbolList()
                 .forEach(symbol ->
                         strategyList.addAll(strategyService.getStrategyList()
@@ -72,15 +72,15 @@ public class ISServiceImpl implements ISService {
                         ));
     }
 
-    void generateStrategyList() {
+    private void generateStrategyList() {
         strategyList.forEach(strategy -> {
             switch (strategy.getType()) {
-                case StrategyName.maxChange -> finalStrategyList.add(new MaxChangeStrategy(strategy));
-                case StrategyName.maxChangeSimple -> finalStrategyList.add(new MaxChangeSimpleStrategy(strategy));
-                case StrategyName.maxChangeNew -> finalStrategyList.add(new MaxChangeNewStrategy(strategy));
-                case StrategyName.maxChangeTPSL -> finalStrategyList.add(new MaxChangeSLTPStrategy(strategy));
-                case StrategyName.scalpStrategy -> finalStrategyList.add(new ScalpMinMaxVolStrategy(strategy));
-                case StrategyName.smaStrategy -> finalStrategyList.add(new CrossSmaStrategy(strategy));
+                case StrategyType.MAX_CHANGE -> finalStrategyList.add(new MaxChangeStrategy(strategy));
+                case StrategyType.MAX_CHANGE_SIMPLE -> finalStrategyList.add(new MaxChangeSimpleStrategy(strategy));
+                case StrategyType.MAX_CHANGE_NEW -> finalStrategyList.add(new MaxChangeNewStrategy(strategy));
+                case StrategyType.MAX_CHANGE_TPSL -> finalStrategyList.add(new MaxChangeSLTPStrategy(strategy));
+                case StrategyType.SCALP_STRATEGY -> finalStrategyList.add(new ScalpMinMaxVolStrategy(strategy));
+                case StrategyType.SMA_STRATEGY -> finalStrategyList.add(new CrossSmaStrategy(strategy));
             }
         });
     }
