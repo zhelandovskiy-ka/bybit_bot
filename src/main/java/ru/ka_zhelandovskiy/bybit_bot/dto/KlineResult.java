@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class Result {
+public class KlineResult {
     private String symbol;
     private String category;
     private List<List<Object>> list;

@@ -1,4 +1,4 @@
-package ru.ka_zhelandovskiy.bybit_bot.dto;
+package ru.ka_zhelandovskiy.bybit_bot.enums;
 
 public enum SumType {
     sum,
