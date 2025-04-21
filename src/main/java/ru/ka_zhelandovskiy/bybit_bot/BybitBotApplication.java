@@ -19,5 +19,4 @@ public class BybitBotApplication {
         builder.headless(false);
         builder.run(args);
     }
-
 }
