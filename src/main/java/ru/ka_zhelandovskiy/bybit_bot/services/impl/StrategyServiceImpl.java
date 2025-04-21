@@ -4,15 +4,19 @@ import com.bybit.api.client.domain.trade.Side;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.ka_zhelandovskiy.bybit_bot.dto.ResultSumDto;
 import ru.ka_zhelandovskiy.bybit_bot.dto.StrategyInfoDto;
-import ru.ka_zhelandovskiy.bybit_bot.dto.SumType;
+import ru.ka_zhelandovskiy.bybit_bot.enums.SumType;
 import ru.ka_zhelandovskiy.bybit_bot.mapper.ResultMapper;
 import ru.ka_zhelandovskiy.bybit_bot.mapper.StrategyMapper;
 import ru.ka_zhelandovskiy.bybit_bot.models.ResultsModel;
 import ru.ka_zhelandovskiy.bybit_bot.models.StrategyModel;
 import ru.ka_zhelandovskiy.bybit_bot.repository.StrategyRepository;
-import ru.ka_zhelandovskiy.bybit_bot.services.*;
+import ru.ka_zhelandovskiy.bybit_bot.services.InstrumentService;
+import ru.ka_zhelandovskiy.bybit_bot.services.ParameterService;
+import ru.ka_zhelandovskiy.bybit_bot.services.ResultService;
+import ru.ka_zhelandovskiy.bybit_bot.services.SenderService;
+import ru.ka_zhelandovskiy.bybit_bot.services.StatisticsService;
+import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 import ru.ka_zhelandovskiy.bybit_bot.strategies.Strategy;
 import ru.ka_zhelandovskiy.bybit_bot.utils.Utilities;
 
@@ -68,11 +72,6 @@ public class StrategyServiceImpl implements StrategyService {
     }
 
     @Override
-    public List<StrategyModel> getAllStrategiesByTimeFrame(int timeFrame) {
-        return strategyRepository.findAllByTimeFrame(timeFrame);
-    }
-
-    @Override
     public List<StrategyModel> getActiveStrategiesByTimeFrame(int timeFrame) {
         return strategyRepository.findAllByTimeFrameAndActiveTrue(timeFrame);
     }
@@ -87,24 +86,11 @@ public class StrategyServiceImpl implements StrategyService {
     }
 
     @Override
-    public StrategyModel getStrategyModelByName(String name) {
-        return strategyRepository.findByName(name);
-    }
-
-    @Override
     public void updateStrategy(Strategy strategy) {
         for (int i = 0; i < strategyList.size(); i++) {
             if (getStrategyList().get(i).getName().equals(strategy.getName()))
                 strategyList.set(i, strategy);
         }
-    }
-
-    @Override
-    public List<String> getStrategiesNameAll() {
-        return strategyRepository.findAll().stream()
-                .map(StrategyModel::getName)
-                .sorted()
-                .toList();
     }
 
     @Override
@@ -116,21 +102,9 @@ public class StrategyServiceImpl implements StrategyService {
     }
 
     @Override
-    public List<ResultSumDto> getStrategiesBankSum() {
-        List<ResultsModel> results = resultService.getAllResult();
+    public boolean isOpenedStrategy() {
 
-        List<ResultsModel> filteredResults = new ArrayList<>();
-
-        getStrategiesNameActive().forEach(name -> {
-            results.forEach(result -> {
-                if (result.getName().equals(name))
-                    filteredResults.add(result);
-            });
-        });
-
-        return filteredResults.stream()
-                .map(resultMapper::toResulSumDto)
-                .toList();
+        return strategyList.stream().anyMatch(Strategy::isOpen);
     }
 
     @Override
@@ -235,7 +209,7 @@ public class StrategyServiceImpl implements StrategyService {
 
         strategy.setProfitPercent(priceChange / strategy.getPriceOpen() * 100);
 
-        log.info(STR."     getProfitPercent 1 | getSide: \{strategy.getSide()} currentPrice: \{currentPrice} getPriceOpen: \{strategy.getPriceOpen()} ProfitPercent: \{priceChange} / \{strategy.getPriceOpen()} * 100 = \{strategy.getProfitPercent()}");
+        log.info(STR."     getProfitPercent 1 | getSide: \{strategy.getSide()} currentPrice: \{currentPrice} getPriceOpen: \{strategy.getPriceOpen()} ProfitPercent: \{Utilities.roundDouble(priceChange)} / \{strategy.getPriceOpen()} * 100 = \{Utilities.roundDouble(strategy.getProfitPercent())}");
 
         return strategy.getProfitPercent();
     }
@@ -253,7 +227,7 @@ public class StrategyServiceImpl implements StrategyService {
 
         double profitPercent = priceChange / strategy.getPriceOpen() * 100;
 
-        log.info(STR."     getProfitPercent 2 | getSide: \{strategy.getSide()} currentPrice: \{currentPrice} firstOpenPrice: \{priceOpen} ProfitPercent: \{priceChange} / \{strategy.getPriceOpen()} * 100 = \{profitPercent}");
+        log.info(STR."     getProfitPercent 2 | getSide: \{strategy.getSide()} currentPrice: \{currentPrice} firstOpenPrice: \{priceOpen} ProfitPercent: \{Utilities.roundDouble(priceChange)} / \{strategy.getPriceOpen()} * 100 = \{Utilities.roundDouble(profitPercent)}");
 
         return profitPercent;
     }
