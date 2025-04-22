@@ -209,7 +209,7 @@ public class StrategyServiceImpl implements StrategyService {
 
         strategy.setProfitPercent(priceChange / strategy.getPriceOpen() * 100);
 
-        log.info(STR."     getProfitPercent 1 | getSide: \{strategy.getSide()} currentPrice: \{currentPrice} getPriceOpen: \{strategy.getPriceOpen()} ProfitPercent: \{Utilities.roundDouble(priceChange)} / \{strategy.getPriceOpen()} * 100 = \{Utilities.roundDouble(strategy.getProfitPercent())}");
+        log.info(STR."  getPP_1 | side: \{strategy.getSide()} CP: \{currentPrice} PO: \{strategy.getPriceOpen()} PP: \{Utilities.roundDouble(priceChange)} / \{strategy.getPriceOpen()} * 100 = \{Utilities.roundDouble(strategy.getProfitPercent())}");
 
         return strategy.getProfitPercent();
     }
@@ -227,7 +227,7 @@ public class StrategyServiceImpl implements StrategyService {
 
         double profitPercent = priceChange / strategy.getPriceOpen() * 100;
 
-        log.info(STR."     getProfitPercent 2 | getSide: \{strategy.getSide()} currentPrice: \{currentPrice} firstOpenPrice: \{priceOpen} ProfitPercent: \{Utilities.roundDouble(priceChange)} / \{strategy.getPriceOpen()} * 100 = \{Utilities.roundDouble(profitPercent)}");
+        log.info(STR."     getPP_2 | side: \{strategy.getSide()} CP: \{currentPrice} PO: \{priceOpen} PP: \{Utilities.roundDouble(priceChange)} / \{strategy.getPriceOpen()} * 100 = \{Utilities.roundDouble(profitPercent)}");
 
         return profitPercent;
     }
@@ -235,7 +235,7 @@ public class StrategyServiceImpl implements StrategyService {
     @Override
     public double getPriceChangePercent(double priceOpen, double price) {
         double profit = (price - priceOpen) / priceOpen * 100;
-        log.info(STR."    CDL.PO: \{priceOpen} CP: \{price} PR: \{profit}");
+        log.info(STR."    CDL.PO: \{priceOpen} CP: \{price} PRFT: \{profit}");
 
         return profit < 0 ? profit * -1 : profit;
     }
