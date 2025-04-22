@@ -184,6 +184,13 @@ public class MaxChangeSLTPStrategy extends Strategy {
         \{getInstrumentName()}: \{percent}% | \{sum}$ | \{percentOfSum}%""";
     }
 
+    @Override
+    public String getMessageForSendClosePosition(String result, double sumWithLeverage, double percent, double sum, double percentOfSum) {
+        sumWithLeverage = getAllBetSum();
+
+        return super.getMessageForSendClosePosition(result, sumWithLeverage, percent, sum, percentOfSum);
+    }
+
     private boolean inBlackList(String instrument) {
         return blackList.stream()
                 .anyMatch(inst -> inst.equals(instrument));

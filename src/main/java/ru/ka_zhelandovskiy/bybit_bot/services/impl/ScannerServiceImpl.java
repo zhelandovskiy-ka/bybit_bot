@@ -150,8 +150,11 @@ public class ScannerServiceImpl implements ScannerService {
     private void checkForCloseOrder(Strategy str) {
         if (!parameterService.isTestMode() && str.isAllowOrder()) {
             log.info(STR."TRY CLOSE ORDER: \{str.getInstrumentName()} \{str.getSide()} \{str.getName()}");
+
             Side side = str.getSide() == Side.BUY ? Side.SELL : Side.BUY;
-            log.info(bybitService.closeOrder(str.getInstrumentName(), side));
+            String closedOrder = bybitService.closeOrder(str.getInstrumentName(), side);
+
+            log.info(closedOrder);
         }
     }
 
