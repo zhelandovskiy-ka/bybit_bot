@@ -8,6 +8,7 @@ import ru.ka_zhelandovskiy.bybit_bot.dto.Order;
 import ru.ka_zhelandovskiy.bybit_bot.dto.OrderResponse;
 import ru.ka_zhelandovskiy.bybit_bot.services.BybitService;
 import ru.ka_zhelandovskiy.bybit_bot.services.OrderService;
+import ru.ka_zhelandovskiy.bybit_bot.services.ParameterService;
 import ru.ka_zhelandovskiy.bybit_bot.services.StrategyService;
 
 @Slf4j
@@ -17,6 +18,7 @@ public class OrderServiceImpl implements OrderService {
 
     private final BybitService bybitService;
     private final StrategyService strategyService;
+    private final ParameterService parameterService;
 
 //    private final List<String> orderIdList = new ArrayList<>();
 
@@ -24,21 +26,23 @@ public class OrderServiceImpl implements OrderService {
     @Scheduled(fixedRate = 3000L)
     public void updateOrdersPrice() {
 
-        boolean isOpenedStrategy = strategyService.isOpenedStrategy();
+        if (!parameterService.isTestMode()) {
+            boolean isOpenedStrategy = strategyService.isOpenedStrategy();
 
-        log.info("OPENED STRATEGY IS {}", isOpenedStrategy);
+            log.info("OPENED STRATEGY IS {}", isOpenedStrategy);
 
-        if (isOpenedStrategy) {
-            log.info("CHECK OPEN ORDERS");
-            for (Order order : bybitService.getOpenOrder()) {
-                String price = bybitService.getPriceFromOrderBook(order.getSymbol(), order.getSide());
-                if (!order.getPrice().equals(price)) {
-                    log.info("ORDER EXIST TRY MODIFY, id: {}, newPrice:{}", order.getOrderId(), price);
-                    OrderResponse orderResponse = bybitService.modifyLimitOrder(order, price);
-                    log.info("ORDER MODIFIED {}", orderResponse);
+            if (isOpenedStrategy) {
+                log.info("CHECK OPEN ORDERS");
+                for (Order order : bybitService.getOpenOrder()) {
+                    String price = bybitService.getPriceFromOrderBook(order.getSymbol(), order.getSide());
+                    if (!order.getPrice().equals(price)) {
+                        log.info("ORDER EXIST TRY MODIFY, id: {}, newPrice:{}", order.getOrderId(), price);
+                        OrderResponse orderResponse = bybitService.modifyLimitOrder(order, price);
+                        log.info("ORDER MODIFIED {}", orderResponse);
+                    }
                 }
+                log.info("ORDERS CHECKED");
             }
-            log.info("ORDERS CHECKED");
         }
 
 /*        log.info("CHECK OPEN ORDERS current orderIds size: {}", orderIdList.size());
