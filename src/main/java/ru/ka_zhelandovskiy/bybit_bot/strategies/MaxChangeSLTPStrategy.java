@@ -24,7 +24,8 @@ public class MaxChangeSLTPStrategy extends Strategy {
     private List<String> blackList;
     private int maxCountOpen;
     private double miniTp;
-    private double allQuantity = 0;
+    private double totalQuantity = 0;
+    private double totalSpent = 0;
     @Getter
     private int countOpen = 0; //сколько раз сработал стоп лосс/сколько раз добавлялась позиция
     private boolean slChanged = false;
@@ -60,37 +61,44 @@ public class MaxChangeSLTPStrategy extends Strategy {
         StrategyService ss = isService.getStrategyService();
         Instrument instrument = is.getInstrumentByName(getInstrumentName());
 
-//        if (inBlackList(instrument.getSymbol()))
-//            return false;
-
         Candlestick cndst = instrument.getCandlestickList().getFirst();
         double currentPrice = instrument.getCurrentPrice();
-        double priceChange = ss.getPriceChangePercent(cndst.getPriceOpen(), currentPrice);
-        double maxChange;
 
-        if (maxChanges != null) {
-            maxChange = maxChanges.get(getInstrumentName());
-        } else
-            maxChange = instrument.getMaxChange();
+        boolean conditionToOpen;
 
-        boolean conditionToOpen = priceChange >= maxChange;
-        log.info(STR."    CP: \{currentPrice}");
-        log.info(STR."    priceChange >= maxChange \{Utilities.roundDouble(priceChange)} >= \{maxChange}?");
+        if (countOpen <= 0) {
+            double priceChange = ss.getPriceChangePercent(cndst.getPriceOpen(), currentPrice);
+            double maxChange;
 
-        if (!conditionToOpen)
-            conditionToOpen = countOpen > 0;
+            if (maxChanges != null) {
+                maxChange = maxChanges.get(getInstrumentName());
+            } else
+                maxChange = instrument.getMaxChange();
+
+            conditionToOpen = priceChange >= maxChange;
+
+            log.info(STR."    priceChange >= maxChange \{Utilities.roundDouble(priceChange)} >= \{maxChange}?");
+        } else {
+            conditionToOpen = true;
+            log.info(STR."    countOpen: {}, conditionToOpen: true, CP: {}", countOpen, currentPrice);
+        }
 
         if (conditionToOpen) {
+            double quantity = Double.parseDouble(is.getQuantity(getInstrumentName(), SumType.sum));
+
             setAllBetSum(getAllBetSum() + is.getSumWithLeverage(SumType.sum, getInstrumentName()));
+            totalSpent += currentPrice * quantity;
+            totalQuantity += quantity;
+            setPriceOpen(totalSpent / totalQuantity);
+
+            log.info("    QUANT: {}, T_SPENT:{}, T_QUANT:{}, PO:{}", quantity, totalSpent, totalQuantity, getPriceOpen());
 
             if (countOpen == 0) {
                 slChanged = false;
-                setPriceOpen(currentPrice);
                 setPreviousPriceOpen(cndst.getPriceOpen());
             }
             else {
                 setPreviousPriceOpen(getPriceOpen());
-                setPriceOpen((currentPrice + getPriceOpen()) / 2);
             }
 
             this.countOpen += 1;
@@ -112,7 +120,7 @@ public class MaxChangeSLTPStrategy extends Strategy {
 
         double profitPercent = ss.getProfitPercent(this);
 
-        log.info(STR."    check TP: \{profitPercent} >= \{getTpPercent()}");
+        log.info(STR."    check TP: \{Utilities.roundDouble(profitPercent)} >= \{getTpPercent()}");
         if (profitPercent >= getTpPercent() * miniTp) {
             double newSlPercent = profitPercent - (getTpPercent() * miniTp) + 0.04;
             if (newSlPercent > getSlPercent()) {
@@ -124,7 +132,7 @@ public class MaxChangeSLTPStrategy extends Strategy {
 
         boolean result = false;
 
-        log.info(STR."    check SL: \{profitPercent} <= \{getSlPercent()}");
+        log.info(STR."    check SL: \{Utilities.roundDouble(profitPercent)} <= \{getSlPercent()}");
         if (profitPercent <= getSlPercent()) {
             if (slChanged) {
                 log.info("        SL was changed");
@@ -137,12 +145,15 @@ public class MaxChangeSLTPStrategy extends Strategy {
             }
             else {
                 setOpen(false);
+                log.info("        setOpen: {}", isOpen());
             }
         } else
             result = profitPercent >= getTpPercent();
 
         if (result) {
             countOpen = 0;
+            totalQuantity = 0;
+            totalSpent = 0;
         }
 
         return result;
